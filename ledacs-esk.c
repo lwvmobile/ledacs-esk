@@ -318,7 +318,7 @@ int main(int argc, char **argv)
 			return 0;
 		}
 		
-		//printf("to=%lld, variable=%d\n", time(NULL)-last_voice_time, voice_to);
+		
 		if ((time(NULL)-last_voice_time)>VOICE_TIMEOUT)	//mute if theres no more voice channel assignments
 		{
 			//fp = fopen("/tmp/squelch", "r+");
@@ -542,8 +542,6 @@ int main(int argc, char **argv)
                                             printf("SR_2=[%16llX]\n", sr_2);
                                             printf("SR_3=[%16llX]\n", sr_3);
                                             printf("SR_4=[%16llX]\n", sr_4);
-                                            //printf("Sender=[%7lldi]\n", (sr_4&0xFFFFF00000000000)>>44);
-                                            //printf("Group=[%6lldg]\n", ((sr_0&0x000000000000000F)<<12)|(sr_1&0xFFF0000000000000)>>52);
                                             printf("Data=[%16X]\n", data);
                                             printf("AFS=[%16llX]\n", afs);
                                             printf("agency=[%4X]\n", agency);
@@ -567,8 +565,6 @@ int main(int argc, char **argv)
                                             printf("SR_2=[%16llX]\n", sr_2);
                                             printf("SR_3=[%16llX]\n", sr_3);
                                             printf("SR_4=[%16llX]\n", sr_4);
-                                            //printf("Sender=[%7lldi]\n", (sr_4&0xFFFFF00000000000)>>44);
-                                            //printf("Group=[%6lldg]\n", ((sr_0&0x000000000000000F)<<12)|(sr_1&0xFFF0000000000000)>>52);
                                             printf("Data=[%16X]\n", data);
                                             printf("AFS=[%16llX]\n", afs);
                                             printf("agency=[%4X]\n", agency);

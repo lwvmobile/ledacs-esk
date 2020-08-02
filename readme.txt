@@ -3,7 +3,9 @@ Forked from https://github.com/sp5wwp/ledacs
 LEDACS-ESK is a command line system written and modified to trunk track
 EDACS ESK systems. This software was forked from aforementioned LEDACS
 found at the link provided above, but having diverged too far from the source
-it is most likely not going to be incorporated into the original *dead* project.
+it is most likely not going to be incorporated into the original project.
+LEDACS-ESK can be run for legacy EDACS systems, but its current working
+status for other variants of EDACS is still unknown.
 
 LEDACS-ESK uses standard rtl_fm for the trunk tracking ledacs-esk program
 which only decifers the EDACS ESK control channel and provides controls to
