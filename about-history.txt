@@ -1,0 +1,61 @@
+Hello,
+
+I am including this text file as a bit of an about the software file and a history file.
+
+That being said, much of the software is a bit of a mystery and lacking in history.
+I found this software "ledacs" on github at the link:
+
+https://github.com/sp5wwp/ledacs
+
+This software didnt' have but 1 star, (I'm the second) and one fork (mine).
+I attempted to contact the poster about this software but never heard back.
+I wanted to ascertain the status of the software, and more importantly, ask
+questions about it, and if it was originally somebody elses software, etc.
+
+The github sp5wwp/ledacs had a polish readme file that I was oringally able to 
+read through google translate, which helped me to begin to understand how this
+software worked and how to operate it. That being said, it didnt' seem to include
+any contact information or developer information. I have also attempted to contact
+sp5wwp by raising an 'issue' on the github but have not heard back. The software on
+the github was uploaded on October 21, 2018 and has not had any activity after the 
+initial upload.
+
+The original 'main.c' file found in the 'decoder' folder has a preamble at the top 
+which reads:
+
+/*-------------------------------------------------------------------------------
+ * 								EDACS96 rtl_fm decoder
+ * 
+ * 
+ * rtl_fm sample rate 28.8kHz (3*9600baud - 3 samples per symbol)
+ * 
+ * 
+ * XTAL Labs
+ * 3 V 2016
+ *-----------------------------------------------------------------------------*/
+
+I have attempted to google search for XTAL Labs using different combinations of 
+search queries and have not found any website, github, forum postings, etc. Therefore,
+I can't make contact with anybody there to see if they own this software.
+
+The github link above had an EDACS_en.txt file which had a lot of information about
+EDACS systems and in particular the structure of packets and how EDACS worked and layed out a 
+foundation for how to write software for EDACS, and included an email address. The next section
+then spoke THE PROGRAM and I began to wonder if the software at the github link was written by 
+the same person as the text file, and included a juno email address,
+so I emailed this person to see if they were the original software
+writer of either component of ledacs, or the dot-sequence program. I received the reply:
+
+Address not found
+Your message wasn't delivered to qwertyuiop10@juno.com because the address couldn't be found, or is unable to receive mail.
+
+Finally, My last idea was to look at other software including Etrunker or any others to see if they
+had any open souce code to compare against to figure out whether or not they either used or 
+created this software. I could find no such information on the matter. I've also inquired at 
+Radio Reference in their forums and have found no leads to go on from there.
+
+In short, why am I writing all of this? I want to make absolute certain that this software isn't
+infringing on anybody's intellectual property and that it has an open source license of some type
+that does in fact allow me to modify and redistribute this software. As I have not been able to 
+make contact with anybody and only have the UNLICENSE LICENSE on sp5wwp/ledacs github, I am
+modifying and distributing this software with the same UNLICENSE LICENSE that I found it with.

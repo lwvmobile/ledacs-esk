@@ -1,0 +1,58 @@
+Prerequisites: sox and rtl_udp, also build-essential or gcc (usual build tools)
+There may be other build requirements, please submit issue if cannot build or
+determine build requirements that are missing here and which platform. Thanks.
+
+Build-Essential, Sox: Just run (on debian/ubuntu/pi, etc)
+
+sudo apt update
+sudo apt install sox build-essential
+
+or however your distro handles package management
+
+rtl_udp
+
+Unzip included rtl-sdr-master-udp.zip folder, should extract
+into folder called 'rtl-sdr-master'
+
+Then run:
+
+chmod +x build.sh rebuild.sh start.sh detector.sh
+
+to give these shell scripts execute permission, then run
+
+./build.sh
+
+to build the ledacs, dot-detector, and rtl_udp applications
+
+if you wish to build only ledacs-esk or dot-detector, or both, then you
+simply only need to run
+
+gcc -o ledacs-esk ledacs-esk.c
+gcc -o dot-detector dot-detector.c
+
+ledacs-esk uses standard rtl_fm installation, whichever you may currently already have installed.
+you may wish to simply use ledacs-esk standalone to only track EDACS-ESK trunking, but you will
+not be able to tune the voice channels using rtl_udp and dot-detector programs.
+
+dot-detector relies on rtl_udp(for now), which will need to be compiled manually or by build.sh to use
+running the build script or manually running cmake/make will only make the software, it 
+WILL NOT INSTALL THE SOFTWARE or otherwise overwrite or cause comflict with any currently existing.
+It is strongly advised NOT TO run 'make install' after making rtl_udp, simply execute it from its 
+build location.
+
+To manually build rtl_udp, use the following procedure.
+
+extract included rtl-sdr-master-udp.zip into LEDACS-ESK folder
+open terminal in LEDACS-ESK folder
+
+cd rtl-sdr-master
+mkdir build
+cd build
+..cmake
+make
+
+this will compile rtl_udp and the rest of the rtl_sdr software, then simply call rtl_udp from its
+finished build directly of:
+
+LEDACS-ESK/rtl-sdr-master/build/src/rtl_udp
+
