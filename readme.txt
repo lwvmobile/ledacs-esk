@@ -18,15 +18,26 @@ move away from RTL_UDP in favor of another solution, as RTL_UDP seems to be
 an outdated and perhaps *dead* project in its own right, but still works 
 well enough for the current scope of this project.
 
+LEDACS-ESK requires two dongles if you wish to track the control channel
+and tune the voice channels. 
+
+LEDACS-ESK has currently been testing and known to run on Ubuntu 18.04 based
+desktop distros (Ubuntu, LM19, Zorin 15, etc) as well as Raspberri Pi
+3b+ hardware running Raspian Buster. Many more are likely to be added as soon
+as they can be properly tested. 
+
 Installation:
 
-Make sure to have the prerequisite sox, aplay, and build-essential packages installed.
-You will also need rtl-sdr gnuradio software already installed as well.
-The scope of this readme will assume you already have these packages installed.
-If not, simply installing GQRX or similar should install them for you.
+Make sure to have the prerequisite sox, aplay, cmake and build-essential installed.
+You will also need rtl-sdr already installed as well.
+Raspberry Pi Raspian users will also need libusb-1.0.0-dev
 
 sudo apt update
-sudo apt install sox aplay build-essential
+sudo apt install sox aplay build-essential cmake
+sudo apt install rtl-sdr
+
+#Additional For Raspberry Pi users# 
+sudo apt install libusb-1.0.0-dev
 
 If you haven't already, please extract the tarball or zip file into
 whichever directory you wish. For the tarball:
@@ -37,7 +48,7 @@ cd LEDACS-ESK
 After installing the prerequisite software and extracting 
 the archive into your directory of choice, please run:
 
-chmod +x build.sh rebuild.sh start.sh detector.sh
+chmod +x build.sh rebuild.sh start.sh detector.sh standalone.sh
 
 This command will give the necessary execution permissions to our scripts for
 building and quickly starting up the software without needing to remember
@@ -149,6 +160,13 @@ Group=[  1155g]
 First, we see the current time, the VOICE status, status bits, LCN channel number, and on the next
 line we see the SENDER and GROUP ID.
 
+Note: You may also wish to use ./standalone as opposed to ./start, using the same parameters.
+This uses the ledacs-esk-standalone version which only tracks the control channel, but does
+not attempt to tune frequencies. This may be preferred if you only have or want to use one dongle.
+Raspberry Pi repo version of rtl-sdr includes UDP functionality, which using the ./start method
+may cause the program to attempt to tune its own instance of rtl_fm if ./detector hasn't launched yet.
+Please be sure to run ./detector first, or use the ./standalone if you only have one dongle.
+
 Dot Detector:
 
 After we have verified we have an active control channel, we can look at the script to 
@@ -168,6 +186,16 @@ DO NOT CHANGE THE SAMPLE RATE. LEAVE AS -s 28.8k.
 The software requires this precise number for proper function. In fact, past RTL_UDP, it is not advised to change any
 of the values as it may hamper the proper functionality of the dot-detector program and subsequently, properly 
 tuning in voice channels. ANY FURTHER MODIFICATION IS AT YOUR OWN DISCRETION AND CANNOT BE HELPED.
+
+Alternatively, on Rapberry Pi hardware, you may be able to use the repo version of rtl_fm as it incorporates
+UDP threads and seems to some degree to function properly, but you may need to specify a manual squelch level that
+encompasses all of your LCNs. However, it cannot be officially supported now, and it is recommended to stick with
+rtl_udp for now. Any feedback of working setups with rtl-sdr+rpt UDP functionality greatly appreciated.
+
+Note: On Raspberry Pi, if ./detector and rtl_udp come up with a USB claimed error message, please run:
+sudo modprobe -r dvb_usb_rtl28xxu
+
+or add to blacklist if you desire. 
 
 What Dot Detector does:
 

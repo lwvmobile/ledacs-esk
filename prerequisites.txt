@@ -1,12 +1,15 @@
-Prerequisites: sox and rtl_udp, also build-essential or gcc (usual build tools)
+Prerequisites: sox and rtl_udp, cmake, build-essential or gcc (usual build tools)
 There may be other build requirements, please submit issue if cannot build or
 determine build requirements that are missing here and which platform. Thanks.
-
+Raspberry Pi: libusb-1.0.0-dev
 Build-Essential, Sox: Just run (on debian/ubuntu/pi, etc)
 
 sudo apt update
-sudo apt install sox build-essential
+sudo apt install sox cmake build-essential
+sudo apt install rtl-sdr
 
+#Raspberry Pi#
+sudo apt install libusb-1.0.0-dev
 or however your distro handles package management
 
 rtl_udp

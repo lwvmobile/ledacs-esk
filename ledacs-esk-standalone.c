@@ -7,7 +7,7 @@
  * 
  * XTAL Labs
  * 3 V 2016
- * LWVMOBILE - ESK VERSION
+ * LWVMOBILE - ESK VERSION Standalone
  * 2020-08 Current Version 0.1a
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
@@ -112,7 +112,7 @@ char data[UDP_BUFLEN]={0};		//
 struct sockaddr_in address;		//
 
 //--------------------------------------------
-int init_udp()		//UDP init
+/*int init_udp()		//UDP init
 {
 	handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -132,7 +132,7 @@ int init_udp()		//UDP init
 
 	return 0;
 }
-
+*/
 char* getTime(void)		//get pretty hh:mm:ss timestamp
 {
 	time_t t = time(NULL);
@@ -149,7 +149,7 @@ char* getTime(void)		//get pretty hh:mm:ss timestamp
 }
 
 //--------------------------------------------
-void tune(unsigned long long int freq)		//tuning to freq
+/*void tune(unsigned long long int freq)		//tuning to freq
 {
 	data[0]=0;
 	data[1]=freq&0xFF;
@@ -170,7 +170,7 @@ void squelchSet(unsigned long long int sq)		//squelch
 	
 	sendto(handle, data, UDP_BUFLEN, 0, (const struct sockaddr*) &address, sizeof(struct sockaddr_in));
 }
-
+*/
 void loadLCN(char* filename)		//load LCN frequencies from file
 {
 	FILE *fl;
@@ -205,10 +205,10 @@ int main(int argc, char **argv)
 {
 	signed int avg=0;		//sample average
 	
-	FILE *fp; int fread;
+	//FILE *fp; int fread;
 	
-	init_udp();
-	sleep(1);			//patience is a virtue	
+	//init_udp();
+	//sleep(1);			//patience is a virtue	
 	
 	//load arguments-----------------------------------
 	if(argc>4) //original is -- if(argc>4) 
@@ -279,14 +279,14 @@ int main(int argc, char **argv)
 	} else {
 		printf("****************************ERROR*****************************\n");
 		printf("Not enough parameters!\n\n");
-		printf("Usage: ./ledacs-esk input CC ESK DEBUG \n\n");
+		printf("Usage: ./ledacs-esk-standalone input CC ESK DEBUG \n\n");
 		printf("input - file with LCN frequency list\n");
 		printf("         must be located in same directory as ledacs-esk\n");
 		printf("cc    - control channel number in LCN frequency list\n");
 		printf("ESK   - 1 - ESK enable; 2 - legacy EDACS no ESK\n");
 		printf("DEBUG - 0 - off; 1-4 debug info verbosity levels\n");
 		printf("        Needs More information on Debug levels\n\n");
-                printf("Example - ./ledacs-esk site243 1 1 0               \n\n");
+                printf("Example - ./ledacs-esk-standalone site243 1 1 0               \n\n");
 		printf("Exiting.\n");
 		printf("**************************************************************\n");
 		
@@ -308,17 +308,17 @@ int main(int argc, char **argv)
 	{
 		if ((time(NULL)-last_sync_time)>SYNC_TIMEOUT)	//check if the CC is still there
 		{
-			printf("Control Channel not found/lost. Timeout %llds. Waiting 5 seconds.\n", time(NULL)-last_sync_time);
+			printf("Control Channel not found/lost. Timeout %llds. Waiting 5 Seconds.\n", time(NULL)-last_sync_time);
 			sleep(5);
-			fp = fopen("/tmp/squelch", "w");
-			fputc('1', fp);
-			squelchSet(5000);	//mute
-			fclose(fp);
+			//fp = fopen("/tmp/squelch", "w");
+			//fputc('1', fp);
+			//squelchSet(5000);	//mute
+			//fclose(fp);
 			last_sync_time = time(NULL);
-			//return 0; //Let's not close the program if CC lost, give it time to come back instead.
+			//return 0;
 		}
 		
-		
+		/*
 		if ((time(NULL)-last_voice_time)>VOICE_TIMEOUT)	//mute if theres no more voice channel assignments
 		{
 			//fp = fopen("/tmp/squelch", "r+");
@@ -336,7 +336,7 @@ int main(int argc, char **argv)
 			}
 		} else
 			voice_to=0;
-		
+		*/
 		read(0, samples, 3*2);	//read 3 samples (6 unsigned chars)
 		raw_stream[0]=(signed short int)((samples[0+1]<<8)|(samples[0]&0xFF));
 		raw_stream[1]=(signed short int)((samples[2+1]<<8)|(samples[2]&0xFF));
@@ -525,7 +525,7 @@ int main(int argc, char **argv)
 				if (lcn==current_lcn) //lcn==current_lcn
 				{
 					last_voice_time = time(NULL); 
-					voice_to=0;
+					//voice_to=0;
 				}
 				
 				if ((status%2)==1 && print_timer==0) //remove print_timer condition if not satisfatory output
@@ -574,7 +574,7 @@ int main(int argc, char **argv)
                                     
                                 }
 				
-				if(argc<=6 || (argc>7 && agency==strtol(argv[6], NULL, 10) &&  fleet==strtol(argv[7], NULL, 10) && subfleet==strtol(argv[8], NULL, 10)))
+				/*if(argc<=6 || (argc>7 && agency==strtol(argv[6], NULL, 10) &&  fleet==strtol(argv[7], NULL, 10) && subfleet==strtol(argv[8], NULL, 10)))
 				{
 					fp = fopen("/tmp/squelch", "r+");
 					fread=fgetc(fp);
@@ -594,7 +594,7 @@ int main(int argc, char **argv)
 					}
 			
 					fclose(fp);
-				}
+				} */
 			}
                         
 			else

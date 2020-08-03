@@ -8,6 +8,7 @@
 
 gcc -o dot-detector dot-detector.c
 gcc -o ledacs-esk ledacs-esk.c
+gcc -o ledacs-esk-standalone ledacs-esk-standalone.c
 tar -xvf rtl-sdr-master-udp.tar.xz
 cd rtl-sdr-master-udp/rtl-sdr-master
 mkdir build

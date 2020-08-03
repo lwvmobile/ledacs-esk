@@ -7,8 +7,10 @@
  * 
  * XTAL Labs
  * 30 IV 2016
+ * LWVMOBILE - Tweaks
+ * 2020-08
  *-----------------------------------------------------------------------------*/
-#define _BSD_SOURCE
+#define _DEFAULT_SOURCE  //_BSD_SOURCE
 #include <stdio.h>
 #include <unistd.h>
 #include <limits.h>
