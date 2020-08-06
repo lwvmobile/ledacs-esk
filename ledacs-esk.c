@@ -52,6 +52,8 @@
 #define	VOICE_CMD		0xEE	//
 
 #define	MAX_LCN_NUM		32	//maximum number of Logical Channels
+#define MAX_ALLOW_NUM		32
+#define MAX_DENY_NUM		32
 
 unsigned char samples[SAMP_NUM];				        //8-bit samples from rtl_fm (or rtl_udp)
 signed short int raw_stream[SAMP_NUM/2];		                //16-bit signed int samples
@@ -79,6 +81,13 @@ unsigned short x_choice=1;
 									//
 unsigned long long afs=0;						//AFS 11-bit info
 
+signed long long int site_id=0;
+signed long long int senderx=0;
+signed long long int groupx=0;
+signed long long int sourcep=0;
+signed long long int targetp=0;  
+
+
 unsigned int vcmd=0x00;
 unsigned char xcommand=0;                                                //XOR of command variable
 unsigned char command=0;						//read from control channel
@@ -96,8 +105,14 @@ unsigned char current_lcn=0;					//current LCN
 unsigned long long int LCN_list[MAX_LCN_NUM];	//LCN list
 unsigned char lcn_num=0;						//number of logical channels
 unsigned char cc=1;
+unsigned long long int Allow_list[MAX_ALLOW_NUM];
+unsigned char allow_num=0;
+unsigned int allow_total=0;
+unsigned long long int Deny_list[MAX_DENY_NUM];
+unsigned char deny_num=0;
+unsigned int deny_total=0;
 								//control channel LCN
-unsigned int debug=0;                                           //debug value for printing out status and data on different command codes, etc
+signed int debug=0;                                           //debug value for printing out status and data on different command codes, etc
 unsigned short d_choice=0;                                      //verbosity levels so users can see debug information etc                                   
 unsigned int iddebug=0;
 unsigned int datadebug=0;
@@ -200,6 +215,66 @@ void loadLCN(char* filename)		//load LCN frequencies from file
     }
 }
 
+void loadALLOW(char* filename)		//load LCN frequencies from file
+{
+	FILE *fl;
+	char *line = NULL;
+	size_t len = 0;
+	
+	char* path = NULL;
+
+        asprintf(&path, "%s", filename); 
+	
+	fl = fopen(path, "r+");
+	
+	if (fl == NULL)
+		printf("Error opening Allow file: %s", filename);
+	
+	allow_num=0;
+	
+	for(short int a=0; a<MAX_ALLOW_NUM-1; a++)
+	{
+		if (getline(&line, &len, fl) != -1)
+			Allow_list[a]=atoi(line);
+			if(Allow_list[a]!=0)
+			{
+				printf("Allow[%d]=%lldg\n", a+1, Allow_list[a]);
+				allow_num++;
+			}
+        allow_total = allow_num;
+    }
+}
+
+void loadDENY(char* filename)		//load LCN frequencies from file
+{
+	FILE *fl;
+	char *line = NULL;
+	size_t len = 0;
+	
+	char* path = NULL;
+
+        asprintf(&path, "%s", filename); 
+	
+	fl = fopen(path, "r+");
+	
+	if (fl == NULL)
+		printf("Error opening Deny file: %s", filename);
+	
+	deny_num=0;
+	
+	for(short int d=0; d<MAX_DENY_NUM-1; d++)
+	{
+		if (getline(&line, &len, fl) != -1)
+			Deny_list[d]=atoi(line);
+			if(Deny_list[d]!=0)
+			{
+				printf("Deny[%d]=%lldg\n", d+1, Deny_list[d]);
+				deny_num++;
+			}
+        deny_total = deny_num;
+    }   
+}
+
 //--------------------------------------------MAIN--------------------------------------
 int main(int argc, char **argv)
 {
@@ -211,7 +286,7 @@ int main(int argc, char **argv)
 	sleep(1);			//patience is a virtue	
 	
 	//load arguments-----------------------------------
-	if(argc>4) //original is -- if(argc>4) 
+	if(argc>3) //need to fix to prevent segmentation fault and send users to **ERROR** message when not enough arguments
 	{
 		loadLCN(argv[1]);	//load LCN freq list file
 		if(lcn_num>MAX_LCN_NUM)
@@ -222,9 +297,28 @@ int main(int argc, char **argv)
 			
 			return 1;
 		}
-		
 		cc=strtol(argv[2], NULL, 10);
 		printf("CC=LCN[%d]\n", cc);
+
+		loadALLOW(argv[5]);	//load LCN freq list file
+		if(allow_num>MAX_ALLOW_NUM)
+		{
+			printf("****************************ERROR*****************************\n");
+			printf("Too many Allowed!\n");
+			printf("**************************************************************\n");
+			
+			return 1;
+		}
+		loadDENY(argv[6]);	//load LCN freq list file
+		if(deny_num>MAX_DENY_NUM)
+		{
+			printf("****************************ERROR*****************************\n");
+			printf("Too many Denied!\n");
+			printf("**************************************************************\n");
+			
+			return 1;
+		}				
+
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -279,14 +373,16 @@ int main(int argc, char **argv)
 	} else {
 		printf("****************************ERROR*****************************\n");
 		printf("Not enough parameters!\n\n");
-		printf("Usage: ./ledacs-esk input CC ESK DEBUG \n\n");
+		printf("Usage: ./ledacs-esk input CC ESK DEBUG allow deny \n\n");
 		printf("input - file with LCN frequency list\n");
 		printf("         must be located in same directory as ledacs-esk\n");
 		printf("cc    - control channel number in LCN frequency list\n");
 		printf("ESK   - 1 - ESK enable; 2 - legacy EDACS no ESK\n");
 		printf("DEBUG - 0 - off; 1-4 debug info verbosity levels\n");
-		printf("        Needs More information on Debug levels\n\n");
-                printf("Example - ./ledacs-esk site243 1 1 0               \n\n");
+		printf("        Needs More information on Debug levels\n");
+                printf("allow   file with allowed group list\n");
+                printf("deny    file with denied  group list\n\n");
+                printf("Example - ./ledacs-esk site243 1 1 0 allow deny             \n\n");
 		printf("Exiting.\n");
 		printf("**************************************************************\n");
 		
@@ -308,8 +404,8 @@ int main(int argc, char **argv)
 	{
 		if ((time(NULL)-last_sync_time)>SYNC_TIMEOUT)	//check if the CC is still there
 		{
-			printf("Control Channel not found/lost. Timeout %llds. Waiting 5 seconds.\n", time(NULL)-last_sync_time);
-			sleep(5);
+			printf("Control Channel not found/lost. Timeout. Waiting...\n");
+			sleep(1);
 			fp = fopen("/tmp/squelch", "w");
 			fputc('1', fp);
 			squelchSet(5000);	//mute
@@ -427,19 +523,27 @@ int main(int argc, char **argv)
 			
 			last_sync_time = time(NULL);	                                  //set timestamp
                         print_timeri = print_timeri - 1;                                 //primitive timer for printing out IDLE status updates
-			if (command==IDLE_CMD && debug==0 && print_timeri<1)		//IDLE, if tuning or tracking seems sluggish, may need to remove && print_timer condition
+			if (command==IDLE_CMD && debug>-1 && debug<2 && print_timeri<1)		//IDLE, if tuning or tracking seems sluggish, may need to remove && print_timer condition or set lower value
 			{
-				printf("Time: %s  AFC=%d \tIDLE \tStatus=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, status, ((sr_2&0xFFF00)>>10)); 
+                                site_id = ((sr_2&0xFFF00)>>10);
+				printf("Time: %s  AFC=%d \tIDLE \tStatus=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, status, site_id);
+                                //printf("argc=[%d]", argc); 
+                                //printf("deny_num=[%d]\n", deny_num);
+                                //printf("allow_total=[%d]\n", allow_total);  
+                                //printf("deny_total=[%d]\n", deny_total);
                                 print_timeri = 150;
-                       
+                                /*for(short int g=0; g<deny_total; g++)
+                                    {
+                                    printf("Deny List=[%lld]\n", Deny_list[g]);
+                                    } */
  
                                 
 			}
 			
 			if (command==IDLE_CMD && debug>1)		//IDLE
 			{
-
-                                printf("Time: %s  \tAFC=%d \tIDLE \tStatus=[0x%1X]\n", getTime(), AFC, status);
+                                site_id = ((sr_2&0xFFF00)>>10);
+                                printf("Time: %s  \tAFC=%d \tIDLE \tStatus=[0x%1X] Site ID=[%3lld]\n", getTime(), AFC, status, site_id);
                                 printf("SR_0=[%16llX]\n", sr_0);
                                 printf("SR_1=[%16llX]\n", sr_1);
                                 printf("SR_2=[%16llX]\n", sr_2);
@@ -484,18 +588,22 @@ int main(int argc, char **argv)
                                 
 
                         }
-                        if (command==PATCH_CMD && debug>0)         //Patch Command
+                        if (command==PATCH_CMD && debug>0 && debug<2)         //Patch Command
                         {
 
-                                printf("Patch Source[%5lldg] Target[%5lldg]\n", ((sr_4&0xFFF00000000000)>>44), ((sr_4&0xFFF00000000)>>34)); //Working, but shows A LOT MORE than current site on Uni, may also show Peer Patches?? 
+                                sourcep = ((sr_4&0xFFF00000000000)>>44);
+                                targetp = ((sr_4&0xFFF00000000)>>34);
+                                printf("Patch Source[%5lldg] Target[%5lldg]\n", sourcep, targetp ); //Working, but shows A LOT MORE than current site on Uni, may also show Peer Patches?? 
+                                //printf("Status=[0x%1X]\n", status);
 
                                 
 
                         }
                         if (command==PATCH_CMD && debug>2)         //Patch Command with SR info
                         {
-
-                                printf("Patch Source[%5lldg] Target[%5lldg]\n", ((sr_4&0xFFF00000000000)>>44), ((sr_4&0xFFF00000000)>>34)); //Working, but shows A LOT MORE than current site on Uni, may also show Peer Patches?? 
+                                sourcep = ((sr_4&0xFFF00000000000)>>44);
+                                targetp = ((sr_4&0xFFF00000000)>>34);
+                                printf("Patch Source[%5lldg] Target[%5lldg]\n", sourcep, targetp); //Working, but shows A LOT MORE than current site on Uni, may also show Peer Patches?? 
                                 printf("SR_0=[%16llX]\n", sr_0);
                                 printf("SR_1=[%16llX]\n", sr_1);
                                 printf("SR_2=[%16llX]\n", sr_2);
@@ -520,6 +628,8 @@ int main(int argc, char **argv)
                         
                         else if (command==vcmd && lcn>0 && lcn!=cc)
 			{
+                                groupx = ((sr_0&0x000000000000000F)<<12)|((sr_1&0xFFF0000000000000)>>52);
+                                senderx = ((sr_4&0xFFFFF00000000000)>>44);
                                 print_timer = print_timer-1;  //very experimental and primitive print timeout
                                 print_timerb= print_timerb-1;
 				if (lcn==current_lcn) //lcn==current_lcn
@@ -532,8 +642,11 @@ int main(int argc, char **argv)
                                 {         
 
                                     printf("Time: %s  AFC=%d\tVOICE\tStatus=[0x%1X] \tLCN=%d\n", getTime(), AFC, status, lcn);
-                                    printf("Sender=[%7lldi]\n", (sr_4&0xFFFFF00000000000)>>44);
-                                    printf("Group=[%6lldg]\n", ((sr_0&0x000000000000000F)<<12)|(sr_1&0xFFF0000000000000)>>52);
+                                    //senderx = ((sr_4&0xFFFFF00000000000)>>44);
+                                    //groupx = ((sr_0&0x000000000000000F)<<12)|((sr_1&0xFFF0000000000000)>>52);
+                                    printf("Sender=[%7lldi]\n", senderx);
+                                    printf("Group=[%6lldg]\n", groupx);
+
                                     print_timer = 5;
                                     if (debug>1)
                                     {
@@ -549,14 +662,33 @@ int main(int argc, char **argv)
                                             printf("subfleet=[%4X]\n", subfleet);
                                     }
 
+
+                                    /*if ( groupx == Deny_list[2] || groupx == Deny_list[1] )
+                                    {
+                                        printf("Group=[%6lldg] is DENIED!\n", groupx);
+                                    }*/
+                                    for(short int h=0; h<deny_total; h++)
+                                    {
+                                        if (groupx == Deny_list[h])
+
+                                        {
+                                            printf("Group[%lld]g is DENIED!\n", Deny_list[h]);
+                                            squelchSet(5000); //remove if group denial is fully functional
+                                        }
+ 
+                                    }
+
+
                                 }                                                    
 				//else             //change back to this if PVT no longer prints or tunes too slowly/not at all
                                 if (print_timerb==0)
                                 {
                                     
                                     printf("Time: %s  AFC=%d\tVOICE\tStatus=[0x%1X] \tLCN=%d\tPVT \n", getTime(), AFC, status, lcn);
-                                    printf("Sender=[%7lldi]\n", (sr_4&0xFFFFF00000000000)>>44);
-                                    printf("Group=[%6lldg]\n", ((sr_0&0x000000000000000F)<<12)|(sr_1&0xFFF0000000000000)>>52);
+                                    //senderx = ((sr_4&0xFFFFF00000000000)>>44);
+                                    //groupx = ((sr_0&0x000000000000000F)<<12)|((sr_1&0xFFF0000000000000)>>52);
+                                    printf("Sender=[%7lldi]\n", senderx);
+                                    printf("Group=[%6lldg]\n", groupx);
                                     print_timerb = 5;
                                     if (debug>1)
                                     {
@@ -571,10 +703,27 @@ int main(int argc, char **argv)
                                             printf("fleet=[%4X]\n", fleet);
                                             printf("subfleet=[%4X]\n", subfleet);
                                     }
+
+                                    /*if ( groupx == Deny_list[2] || groupx == Deny_list[1] )
                                     
+                                    {
+                                        printf("Group=[%6lldg] is DENIED!\n", groupx);
+                                    }*/
+                                    for(short int h=0; h<deny_total; h++)
+                                    {
+                                        if (groupx == Deny_list[h])
+
+                                        {
+                                            printf("Group[%lld]g is DENIED!\n", Deny_list[h]);
+                                            squelchSet(5000); //remove if group denial is fully functional
+                                        }
+ 
+                                    }
                                 }
 				
-				if(argc<=6 || (argc>7 && agency==strtol(argv[6], NULL, 10) &&  fleet==strtol(argv[7], NULL, 10) && subfleet==strtol(argv[8], NULL, 10)))
+                                /*
+		                if(allow_num==0 && deny_num==0 || allow_num==0 && deny_num>=1 && groupx != Deny_list[2] && groupx !=Deny_list[1] ||
+                                   allow_num>0 && deny_num>=0 && groupx == Allow_list[0]) // can't have both an allow list, and a deny list populated at the same time
 				{
 					fp = fopen("/tmp/squelch", "r+");
 					fread=fgetc(fp);
@@ -594,10 +743,66 @@ int main(int argc, char **argv)
 					}
 			
 					fclose(fp);
-				}
+				} 
+                                */
+
+                                for(short int h=0; h<deny_total; h++)
+                                {
+                                    if(allow_num==0 && deny_num==0 || allow_num==0 && deny_num>=1 && groupx != Deny_list[h]) //slips because depending on where in the list, will be true until iteration where its false
+                                      
+				    {
+					    fp = fopen("/tmp/squelch", "r+");
+					    fread=fgetc(fp);
+					
+					    if(fread=='1')	//if we are currently NOT listening to anything else
+					    {
+						    if (lcn!=current_lcn)		//tune to LCN
+						    {
+							    tune(LCN_list[lcn-1]);
+							    current_lcn=lcn;
+						    }
+					
+						    fp = freopen("/tmp/squelch", "w", fp);
+						    fputc('0', fp);
+						    squelchSet(0);	//unmute
+
+					    }
+			
+					    fclose(fp);
+				    } 
+
+                                }
+
+                                for(short int j=0; j<allow_total; j++)
+                                {
+                                    if(allow_num>0 && groupx == Allow_list[j]) //should cover all possibilities, I think, still needs testing/debugging, seems to slip or have delay
+                                       
+				    {
+					    fp = fopen("/tmp/squelch", "r+");
+					    fread=fgetc(fp);
+					
+					    if(fread=='1')	//if we are currently NOT listening to anything else
+					    {
+						    if (lcn!=current_lcn)		//tune to LCN
+						    {
+							    tune(LCN_list[lcn-1]);
+							    current_lcn=lcn;
+						    }
+					
+						    fp = freopen("/tmp/squelch", "w", fp);
+						    fputc('0', fp);
+						    squelchSet(0);	//unmute
+
+					    }
+			
+					    fclose(fp);
+				    } 
+
+                                }
+                                    
+
 			}
-                        
-			else
+                        else
 			{
 			    //printf("LEDACS-ESK version 20202-08 LWVMOBILE. Current Version: 0.1a \n");	
                                 

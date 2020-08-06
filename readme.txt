@@ -83,7 +83,7 @@ LEDACS-ESK will be, and we will simply execute the start.sh file to start the so
 
 The contents of a typical file will be:
 
-rtl_fm -d 0 -f 851375000 -s 28.8k -p 0.5 -g 49 | ./ledacs-esk site243 1 1 0
+rtl_fm -d 0 -f 851375000 -s 28.8k -p 0.5 -g 49 | ./ledacs-esk site243 1 1 0 allow deny
 
 First, we will specify 
 -d 0 as our RTL of choice, 
@@ -102,7 +102,15 @@ REPEAT, DO NOT CHANGE THE SAMPLE RATE. LEAVE AS -s 28.8k.
 On the other side, we see this is piped into our software. Currently, you need
 to specify the file name with the LCN channels, the first (1) specifies LCN 1
 as control, the second (1) specifies EDACS-ESK, which can be changed to 2 for legacy,
-and the (0) specifies debug verbosity levels. see ./ledacs-esk -h for more info.
+and the (0) specifies debug verbosity levels. allow and deny refer to files which can
+be populated with group numbers in decimal format for the purpose of allow or deny of
+voice channel assignment. Currently, allow overrides everything in deny, having information
+in both will default to allow.
+
+Currently, all of these arguments are required, otherwise a segmentation fault will occur.
+Sorry :( 
+
+See ./ledacs-esk -h for more info.
 
 Then, when you have all values set appropriately in the start.sh file, simply execute it
 with the following command:
