@@ -529,7 +529,7 @@ int main(int argc, char **argv)
 				printf("Time: %s  AFC=%d \tIDLE \tStatus=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, status, site_id);
                                 //printf("argc=[%d]", argc); 
                                 //printf("deny_num=[%d]\n", deny_num);
-                                //printf("allow_total=[%d]\n", allow_total);  
+                                //printf("allow_num=[%d]\n", allow_num);  
                                 //printf("deny_total=[%d]\n", deny_total);
                                 print_timeri = 150;
                                 /*for(short int g=0; g<deny_total; g++)
@@ -721,9 +721,8 @@ int main(int argc, char **argv)
                                     }
                                 }
 				
-                                /*
-		                if(allow_num==0 && deny_num==0 || allow_num==0 && deny_num>=1 && groupx != Deny_list[2] && groupx !=Deny_list[1] ||
-                                   allow_num>0 && deny_num>=0 && groupx == Allow_list[0]) // can't have both an allow list, and a deny list populated at the same time
+                                
+		                if(allow_num==0 && deny_num==0) // if there are neither allow or deny, then allow all calls
 				{
 					fp = fopen("/tmp/squelch", "r+");
 					fread=fgetc(fp);
@@ -744,11 +743,11 @@ int main(int argc, char **argv)
 			
 					fclose(fp);
 				} 
-                                */
+                                
 
                                 for(short int h=0; h<deny_total; h++)
                                 {
-                                    if(allow_num==0 && deny_num==0 || allow_num==0 && deny_num>=1 && groupx != Deny_list[h]) //slips because depending on where in the list, will be true until iteration where its false
+                                    if(allow_num==0 && deny_num>=1 && groupx != Deny_list[h]) //if deny group has 1 or more listing, will open if groupx is not equal to iterations of deny_list, may slip
                                       
 				    {
 					    fp = fopen("/tmp/squelch", "r+");
@@ -775,7 +774,7 @@ int main(int argc, char **argv)
 
                                 for(short int j=0; j<allow_total; j++)
                                 {
-                                    if(allow_num>0 && groupx == Allow_list[j]) //should cover all possibilities, I think, still needs testing/debugging, seems to slip or have delay
+                                    if(allow_num>0 && groupx == Allow_list[j]) //last, if allow group has 1 or more, will override deny list, but only play groups in allow list 
                                        
 				    {
 					    fp = fopen("/tmp/squelch", "r+");
