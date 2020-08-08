@@ -8,7 +8,7 @@
  * XTAL Labs
  * 3 V 2016
  * LWVMOBILE - ESK VERSION
- * 2020-08 Current Version 0.1a
+ * 2020-08 Current Version 0.11a
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -111,6 +111,7 @@ unsigned int allow_total=0;
 unsigned long long int Deny_list[MAX_DENY_NUM];
 unsigned char deny_num=0;
 unsigned int deny_total=0;
+signed int deny_flag=0;
 								//control channel LCN
 signed int debug=0;                                           //debug value for printing out status and data on different command codes, etc
 unsigned short d_choice=0;                                      //verbosity levels so users can see debug information etc                                   
@@ -238,7 +239,7 @@ void loadALLOW(char* filename)		//load LCN frequencies from file
 			Allow_list[a]=atoi(line);
 			if(Allow_list[a]!=0)
 			{
-				printf("Allow[%d]=%lldg\n", a+1, Allow_list[a]);
+				printf("Allow[%d]=%lld Group/Sender\n", a+1, Allow_list[a]);
 				allow_num++;
 			}
         allow_total = allow_num;
@@ -268,7 +269,7 @@ void loadDENY(char* filename)		//load LCN frequencies from file
 			Deny_list[d]=atoi(line);
 			if(Deny_list[d]!=0)
 			{
-				printf("Deny[%d]=%lldg\n", d+1, Deny_list[d]);
+				printf("Deny[%d]=%lld Group/Sender \n", d+1, Deny_list[d]);
 				deny_num++;
 			}
         deny_total = deny_num;
@@ -523,6 +524,7 @@ int main(int argc, char **argv)
 			
 			last_sync_time = time(NULL);	                                  //set timestamp
                         print_timeri = print_timeri - 1;                                 //primitive timer for printing out IDLE status updates
+                        deny_flag = 0;                                                   //reset deny flag back to 0 for start of each loop
 			if (command==IDLE_CMD && debug>-1 && debug<2 && print_timeri<1)		//IDLE, if tuning or tracking seems sluggish, may need to remove && print_timer condition or set lower value
 			{
                                 site_id = ((sr_2&0xFFF00)>>10);
@@ -591,9 +593,9 @@ int main(int argc, char **argv)
                         if (command==PATCH_CMD && debug>0 && debug<2)         //Patch Command
                         {
 
-                                sourcep = ((sr_4&0xFFF00000000000)>>44);
-                                targetp = ((sr_4&0xFFF00000000)>>34);
-                                printf("Patch Source[%5lldg] Target[%5lldg]\n", sourcep, targetp ); //Working, but shows A LOT MORE than current site on Uni, may also show Peer Patches?? 
+                                targetp = ((sr_4&0xFFF00000000000)>>44);
+                                sourcep = ((sr_4&0xFFF00000000)>>34);
+                                printf("Patch Source[%5lldg] Target[%5lldg]\n", sourcep, targetp ); //Working, but shows A LOT MORE than current site on Uni, I don't know why 
                                 //printf("Status=[0x%1X]\n", status);
 
                                 
@@ -601,9 +603,9 @@ int main(int argc, char **argv)
                         }
                         if (command==PATCH_CMD && debug>2)         //Patch Command with SR info
                         {
-                                sourcep = ((sr_4&0xFFF00000000000)>>44);
-                                targetp = ((sr_4&0xFFF00000000)>>34);
-                                printf("Patch Source[%5lldg] Target[%5lldg]\n", sourcep, targetp); //Working, but shows A LOT MORE than current site on Uni, may also show Peer Patches?? 
+                                targetp = ((sr_4&0xFFF00000000000)>>44);
+                                sourcep = ((sr_4&0xFFF00000000)>>34);
+                                printf("Patch Source[%5lldg] Target[%5lldg]\n", sourcep, targetp); //Working, but shows A LOT MORE than current site on Uni, how do I keep tell what is what? 
                                 printf("SR_0=[%16llX]\n", sr_0);
                                 printf("SR_1=[%16llX]\n", sr_1);
                                 printf("SR_2=[%16llX]\n", sr_2);
@@ -638,7 +640,8 @@ int main(int argc, char **argv)
 					voice_to=0;
 				}
 				
-				if ((status%2)==1 && print_timer==0) //remove print_timer condition if not satisfatory output
+				//if ((status%2)==1 && print_timer==0) //remove print_timer condition if not satisfatory output
+				if ((status%2)==1) //removed print_timer because it delayed the deny_flag 
                                 {         
 
                                     printf("Time: %s  AFC=%d\tVOICE\tStatus=[0x%1X] \tLCN=%d\n", getTime(), AFC, status, lcn);
@@ -673,18 +676,39 @@ int main(int argc, char **argv)
 
                                         {
                                             printf("Group[%lld]g is DENIED!\n", Deny_list[h]);
-                                            squelchSet(5000); //remove if group denial is fully functional
+                                            //squelchSet(5000); //remove if group denial is fully functional
+                                            deny_flag=1;
+                                            if (lcn==current_lcn) //adding this so that if we accidentally tune a denied channel, we can cut it off early
+                                            {
+                                                squelchSet(5000);
+                                            }
+                                        }
+ 
+                                    }
+
+                                    for(short int k=0; k<deny_total; k++)
+                                    {
+                                        if (senderx == Deny_list[k])
+
+                                        {
+                                            printf("Sender[%lld]i is DENIED!\n", Deny_list[k]);
+                                            //squelchSet(5000); //remove if group denial is fully functional
+                                            deny_flag=1;
+                                            if (lcn==current_lcn) //adding this so that if we accidentally tune a denied channel, we can cut it off early
+                                            {
+                                                squelchSet(5000);
+                                            }
                                         }
  
                                     }
 
 
                                 }                                                    
-				//else             //change back to this if PVT no longer prints or tunes too slowly/not at all
-                                if (print_timerb==0)
+				else             //change back to this if PVT no longer prints or tunes too slowly/not at all
+                                //if (print_timerb==0) //removed print_timer becuase it delayed the deny_flag
                                 {
                                     
-                                    printf("Time: %s  AFC=%d\tVOICE\tStatus=[0x%1X] \tLCN=%d\tPVT \n", getTime(), AFC, status, lcn);
+                                    printf("Time: %s  AFC=%d\tVOICE\tStatus=[0x%1X] \tLCN=%d\tPVT \n", getTime(), AFC, status, lcn); //I need to figure out if PVT is accurate, what it means exactly, and if I should OMIT this?
                                     //senderx = ((sr_4&0xFFFFF00000000000)>>44);
                                     //groupx = ((sr_0&0x000000000000000F)<<12)|((sr_1&0xFFF0000000000000)>>52);
                                     printf("Sender=[%7lldi]\n", senderx);
@@ -709,13 +733,34 @@ int main(int argc, char **argv)
                                     {
                                         printf("Group=[%6lldg] is DENIED!\n", groupx);
                                     }*/
-                                    for(short int h=0; h<deny_total; h++)
+                                    for(short int l=0; l<deny_total; l++)
                                     {
-                                        if (groupx == Deny_list[h])
+                                        if (groupx == Deny_list[l])
 
                                         {
-                                            printf("Group[%lld]g is DENIED!\n", Deny_list[h]);
-                                            squelchSet(5000); //remove if group denial is fully functional
+                                            printf("Group[%lld]g is DENIED!\n", Deny_list[l]);
+                                            //squelchSet(5000); //remove if group denial is fully functional                                            
+                                            deny_flag=1;
+                                            if (lcn==current_lcn) //adding this so that if we accidentally tune a denied channel, we can cut it off early
+                                            {
+                                                squelchSet(5000);
+                                            }
+                                        }
+ 
+                                    }
+
+                                    for(short int o=0; o<deny_total; o++)
+                                    {
+                                        if (senderx == Deny_list[o])
+
+                                        {
+                                            printf("Sender[%lld]i is DENIED!\n", Deny_list[o]);
+                                            //squelchSet(5000); //remove if group denial is fully functional
+                                            deny_flag=1;
+                                            if (lcn==current_lcn) //adding this so that if we accidentally tune a denied channel, we can cut it off early
+                                            {
+                                                squelchSet(5000);
+                                            }
                                         }
  
                                     }
@@ -743,9 +788,31 @@ int main(int argc, char **argv)
 			
 					fclose(fp);
 				} 
+
+		                if(deny_flag != 1) // if deny flag is not tripped, open voice call
+				{
+					fp = fopen("/tmp/squelch", "r+");
+					fread=fgetc(fp);
+					
+					if(fread=='1')	//if we are currently NOT listening to anything else
+					{
+						if (lcn!=current_lcn)		//tune to LCN
+						{
+							tune(LCN_list[lcn-1]);
+							current_lcn=lcn;
+						}
+					
+						fp = freopen("/tmp/squelch", "w", fp);
+						fputc('0', fp);
+						squelchSet(0);	//unmute
+
+					}
+			
+					fclose(fp);
+				} 
                                 
 
-                                for(short int h=0; h<deny_total; h++)
+                                /*for(short int h=0; h<deny_total; h++)  //removed in favor of using deny_flag
                                 {
                                     if(allow_num==0 && deny_num>=1 && groupx != Deny_list[h]) //if deny group has 1 or more listing, will open if groupx is not equal to iterations of deny_list, may slip
                                       
@@ -770,11 +837,12 @@ int main(int argc, char **argv)
 					    fclose(fp);
 				    } 
 
-                                }
+                                }*/
 
                                 for(short int j=0; j<allow_total; j++)
                                 {
-                                    if(allow_num>0 && groupx == Allow_list[j]) //last, if allow group has 1 or more, will override deny list, but only play groups in allow list 
+                                    //if(allow_num>0 && groupx == Allow_list[j]) //last, if allow group has 1 or more, will override deny list, but only play groups in allow list 
+                                    if(allow_num>0 && groupx == Allow_list[j] || allow_num>0 && senderx == Allow_list[j]) //now allows for groups and senders
                                        
 				    {
 					    fp = fopen("/tmp/squelch", "r+");
@@ -803,7 +871,7 @@ int main(int argc, char **argv)
 			}
                         else
 			{
-			    //printf("LEDACS-ESK version 20202-08 LWVMOBILE. Current Version: 0.1a \n");	
+			    //printf("LEDACS-ESK version 20202-08 LWVMOBILE. Current Version: 0.11a \n");	
                                 
             		}
 		}
