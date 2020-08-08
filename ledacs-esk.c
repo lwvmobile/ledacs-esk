@@ -789,7 +789,7 @@ int main(int argc, char **argv)
 					fclose(fp);
 				} 
 
-		                if(deny_flag != 1) // if deny flag is not tripped, open voice call
+		                if(allow_num==0 && deny_flag != 1) // if nothing in allow file and if deny flag is not tripped, open voice call
 				{
 					fp = fopen("/tmp/squelch", "r+");
 					fread=fgetc(fp);
