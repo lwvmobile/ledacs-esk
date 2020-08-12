@@ -40,15 +40,10 @@ sudo apt install rtl-sdr
 #Additional For Raspberry Pi users# 
 sudo apt install libusb-1.0.0-dev
 
-If you haven't already, please extract the tarball or zip file into
-whichever directory you wish. For the tarball:
+If you haven't already, please git clone the source code.
 
-tar -xvf LEDACS-ESK.tar.xz
+git clone https://github.com/lwvmobile/ledacs-esk
 cd LEDACS-ESK
-
-After installing the prerequisite software and extracting 
-the archive into your directory of choice, please run:
-
 chmod +x build.sh rebuild.sh start.sh detector.sh analyzer.sh
 
 This command will give the necessary execution permissions to our scripts for
