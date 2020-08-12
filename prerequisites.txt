@@ -19,7 +19,7 @@ into folder called 'rtl-sdr-master'
 
 Then run:
 
-chmod +x build.sh rebuild.sh start.sh detector.sh
+chmod +x build.sh rebuild.sh start.sh detector.sh analyzer.sh
 
 to give these shell scripts execute permission, then run
 

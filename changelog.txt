@@ -1,0 +1,62 @@
+v0.2 Build 2020.08.12
+
+Implimented allow/deny lists for groups and senders
+Cleaned up or removed lots of code and comments
+Removed all code related to PATCH, ID, DATA, and other commands as they were too complex
+Removed distinction between a normal call and a PVT call, since it didn't seem reliable
+Renamed standalone.sh to analyzer.sh, so I could call ./start.sh with tabs faster
+Renamed ledacs-esk-standalone to ledacs-esk-analyzer for consistency
+Other minor tweaks/fixes 
+Inadvertent new bugs probably
+
+
+Known Issues:
+
+1.) Site ID, LCN, Group, Sender, or other values may temporarily report an incorrect number.
+
+This issue is primarily due to a lack of any real error detection, if the signal or samples read in that 
+exact moment by the software are 'off', then incorect values may temporarily show up.  Due to the simplicity
+of this software, this issue will most likely not be fixed, but shouldn't greatly affect the performance
+of the software. For now, best fix may be to ensure good signal with your dongle, adjust position/antenna
+if its convenient.
+
+2.) Voice channels may open for groups/senders in the deny list
+
+This is due to two factors, the first, as above, iccorect values streaming into the software, it may open
+the channel for a bogus group or sender if it didn't read it correctly. Second, the manner of checkdown
+that occurs checking the current group versus the deny list, it may open up if the group or sender is
+further down the list. A 'quick fix' was implimented to set the squelch high to close the channel, but
+this may introduce new issues such as closing a desired voice channel when the denied group/sender
+attempts to speak up at the same time.
+
+3.) Allow List overrides Deny list
+
+If you have items in the allow list and the deny list, the deny list will be ignored in favor of the
+allow list. This is by design, Allow list only allows what you manually specify, denying everything
+else. 
+
+4.) Segmentation fault if incorrect variables are given at command prompt or in start.sh, standalone.sh.
+
+I haven't had time to rewrite the arguments portion of the software, partially out of not wanting to 
+break more stuff and end up banging my head against my desk trying to figure it out. Been focused more
+on getting what works to work better and stripping out things that don't work so well. Also, I'm not
+a good programmer, laziness, busy, etc. etc. Just be sure to use all the required arguments for now. 
+
+5.) Unknown functionality with other variants of EDACS
+
+Currently, this software has only been tested against a few EDACS ESK control channels, since
+I don't have any other EDACS in my home area, I have yet to be able to test it against the
+original and other variants of EDACS. Any feedback would be appreciated. If nothing happens
+for you and you are sure you are tuned to a EDACS CC, then please run debug options on for verbose
+details and feel free to submit them. 
+
+rtl_fm -d 0 -f 851375000 -s 28.8k -p 0.5 -g 49 | ./ledacs-esk site243 1 1 3 allow deny >> debug.txt
+
+Run something similar to above for a few moments and then ctrl-c to close it, then submit the 
+debug.txt file with a description of the type of EDACS system, any known site ID, etc.
+
+
+
+
+
+

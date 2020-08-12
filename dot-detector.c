@@ -152,9 +152,13 @@ int main(void)
 			fclose(fp);
 		}
 		
-		/*if ((sr&0xFFFFFF)==0xC71C71 || (sr&0xFFFFFF)==0xAAAAAA || (sr&0xFFFFFF)==0x555555){
-			printf("%016llX\n", sr);
-		}*/
+		else /* ((sr&0xFFFFFF)==0xC71C71 || (sr&0xFFFFFF)==0xAAAAAA || (sr&0xFFFFFF)==0x555555){ */
+		{
+                    if (sr != 0x0000000000000000)
+                    {
+                	//printf("%016llX\n", sr);
+                    }
+		}
 	}
 
 	return 0;

@@ -7,7 +7,7 @@
  * 
  * XTAL Labs
  * 3 V 2016
- * LWVMOBILE - ESK VERSION
+ * LWVMOBILE - ESK ANALYZER VERSION
  * 2020-08 Current Version 0.2
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
@@ -126,26 +126,6 @@ char data[UDP_BUFLEN]={0};		//
 struct sockaddr_in address;		//
 
 //--------------------------------------------
-int init_udp()		//UDP init
-{
-	handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-	if (handle <= 0)
-	{
-			printf("Failed to create socket\n");
-			return 1;
-	}
-
-	printf("Sockets successfully initialized\n");
-
-	memset((char *) &address, 0, sizeof(address));
-	
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = inet_addr(SRV_IP); //address of host
-	address.sin_port = htons(port);
-
-	return 0;
-}
 
 char* getTime(void)		//get pretty hh:mm:ss timestamp
 {
@@ -162,117 +142,6 @@ char* getTime(void)		//get pretty hh:mm:ss timestamp
 	return curr;
 }
 
-//--------------------------------------------
-void tune(unsigned long long int freq)		//tuning to freq
-{
-	data[0]=0;
-	data[1]=freq&0xFF;
-	data[2]=(freq>>8)&0xFF;
-	data[3]=(freq>>16)&0xFF;
-	data[4]=(freq>>24)&0xFF;
-	
-	sendto(handle, data, UDP_BUFLEN, 0, (const struct sockaddr*) &address, sizeof(struct sockaddr_in));
-}
-
-void squelchSet(unsigned long long int sq)		//squelch
-{
-	data[0]=2;
-	data[1]=sq&0xFF;
-	data[2]=(sq>>8)&0xFF;
-	data[3]=(sq>>16)&0xFF;
-	data[4]=(sq>>24)&0xFF;
-	
-	sendto(handle, data, UDP_BUFLEN, 0, (const struct sockaddr*) &address, sizeof(struct sockaddr_in));
-}
-
-void loadLCN(char* filename)		//load LCN frequencies from file
-{
-	FILE *fl;
-	char *line = NULL;
-	size_t len = 0;
-	
-	char* path = NULL;
-
-        asprintf(&path, "%s", filename); 
-	
-	fl = fopen(path, "r+");
-	
-	if (fl == NULL)
-		printf("Error opening LCN file: %s", filename);
-	
-	lcn_num=0;
-	
-	for(short int i=0; i<MAX_LCN_NUM-1; i++)
-	{
-		if (getline(&line, &len, fl) != -1)
-			LCN_list[i]=atoi(line);
-			if(LCN_list[i]!=0)
-			{
-				printf("LCN[%d]=%lldHz\n", i+1, LCN_list[i]);
-				lcn_num++;
-			}
-    }
-}
-
-void loadALLOW(char* filename)		//load LCN frequencies from file
-{
-	FILE *fl;
-	char *line = NULL;
-	size_t len = 0;
-	
-	char* path = NULL;
-
-        asprintf(&path, "%s", filename); 
-	
-	fl = fopen(path, "r+");
-	
-	if (fl == NULL)
-		printf("Error opening Allow file: %s", filename);
-	
-	allow_num=0;
-	
-	for(short int a=0; a<MAX_ALLOW_NUM-1; a++)
-	{
-		if (getline(&line, &len, fl) != -1)
-			Allow_list[a]=atoi(line);
-			if(Allow_list[a]!=0)
-			{
-				printf("Allow[%d]=%lld Group/Sender\n", a+1, Allow_list[a]);
-				allow_num++;
-			}
-        allow_total = allow_num;
-    }
-}
-
-void loadDENY(char* filename)		//load LCN frequencies from file
-{
-	FILE *fl;
-	char *line = NULL;
-	size_t len = 0;
-	
-	char* path = NULL;
-
-        asprintf(&path, "%s", filename); 
-	
-	fl = fopen(path, "r+");
-	
-	if (fl == NULL)
-		printf("Error opening Deny file: %s", filename);
-	
-	deny_num=0;
-	
-	for(short int d=0; d<MAX_DENY_NUM-1; d++)
-	{
-		if (getline(&line, &len, fl) != -1)
-			Deny_list[d]=atoi(line);
-			if(Deny_list[d]!=0)
-			{
-				printf("Deny[%d]=%lld Group/Sender \n", d+1, Deny_list[d]);
-				deny_num++;
-			}
-        deny_total = deny_num;
-    }   
-}
 
 //--------------------------------------------MAIN--------------------------------------
 int main(int argc, char **argv)
@@ -281,43 +150,14 @@ int main(int argc, char **argv)
 	
 	FILE *fp; int fread;
 	
-	init_udp();
+
 	sleep(1);			//patience is a virtue	
 	
 	//load arguments-----------------------------------
-	if(argc>3) //need to fix to prevent segmentation fault and send users to **ERROR** message when not enough arguments
+	if(argc>1) //need to fix to prevent segmentation fault and send users to **ERROR** message when not enough arguments
 	{
-		loadLCN(argv[1]);	//load LCN freq list file
-		if(lcn_num>MAX_LCN_NUM)
-		{
-			printf("****************************ERROR*****************************\n");
-			printf("Too many LCNs!\n");
-			printf("**************************************************************\n");
 			
-			return 1;
-		}
-		cc=strtol(argv[2], NULL, 10);
-		printf("CC=LCN[%d]\n", cc);
-
-		loadALLOW(argv[5]);	//load LCN freq list file
-		if(allow_num>MAX_ALLOW_NUM)
-		{
-			printf("****************************ERROR*****************************\n");
-			printf("Too many Allowed!\n");
-			printf("**************************************************************\n");
-			
-			return 1;
-		}
-		loadDENY(argv[6]);	//load LCN freq list file
-		if(deny_num>MAX_DENY_NUM)
-		{
-			printf("****************************ERROR*****************************\n");
-			printf("Too many Denied!\n");
-			printf("**************************************************************\n");
-			
-			return 1;
-		}				
-                printf("LEDACS-ESK v0.2 Build 2020.08.12\n");
+                printf("LEDACS-ESK-ANALYZER v0.2 Build 2020.08.12\n");
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -328,7 +168,7 @@ int main(int argc, char **argv)
 
                 //load choice for EDACS system, 1 for ESK; 2 for Others(no ^A0 for command) 
 
-                x_choice = strtol(argv[3], NULL, 10);
+                x_choice = strtol(argv[1], NULL, 10);
                 if (x_choice==1)
                 {
                     x_mask=0xA0; //XOR for ESK
@@ -340,7 +180,7 @@ int main(int argc, char **argv)
                     vcmd=0xEE;
                 }
 
-                d_choice = strtol(argv[4], NULL, 10);
+                d_choice = strtol(argv[2], NULL, 10);
                 if (d_choice>0)
                 {
                     debug=d_choice;
@@ -371,18 +211,18 @@ int main(int argc, char **argv)
 		
 	} else {
 		printf("****************************ERROR*****************************\n");
-                printf("LEDACS-ESK v0.2 Build 2020.08.12 \n");
+                printf("LEDACS-ESK-ANALYZER v0.2 Build 2020.08.12 \n");
 		printf("Not enough parameters!\n\n");
-		printf("Usage: ./ledacs-esk input CC ESK DEBUG allow deny \n\n");
+		printf("Usage: ./ledacs-esk-analyzer ESK DEBUG \n\n");
 		printf("input - file with LCN frequency list\n");
 		printf("         must be located in same directory as ledacs-esk\n");
-		printf("cc    - control channel number in LCN frequency list\n");
+		printf("\n");
 		printf("ESK   - 1 - ESK enable; 2 - legacy EDACS no ESK\n");
 		printf("DEBUG - 0 - off; 1-3 debug info verbosity levels\n");
 		printf("        Needs More information on Debug levels\n");
-                printf("allow   file with allowed group list\n");
-                printf("deny    file with denied  group list\n\n");
-                printf("Example - ./ledacs-esk site243 1 1 0 allow deny             \n\n");
+                printf("                                                 ");
+                printf("\n\n");
+                printf("Example - ./ledacs-esk-analyzer 1 0            \n\n");
 		printf("Exiting.\n");
 		printf("**************************************************************\n");
 		
@@ -406,32 +246,10 @@ int main(int argc, char **argv)
 		{
 			printf("Control Channel not found/lost. Timeout. Waiting...\n");
 			sleep(1);
-			fp = fopen("/tmp/squelch", "w");
-			fputc('1', fp);
-			squelchSet(5000);	//mute, may remove if condition of control channel lost during voice active
-			fclose(fp);
 			last_sync_time = time(NULL);
 			//return 0; //Let's not close the program if CC lost, give it time to come back instead.
 		}
-		
-		
-		if ((time(NULL)-last_voice_time)>VOICE_TIMEOUT)	//mute if theres no more voice channel assignments
-		{
-			//fp = fopen("/tmp/squelch", "r+");
-			//fread=fgetc(fp);
-			
-			if (voice_to==0)
-			{
-				squelchSet(5000);	//mute
-				//usleep(500*1000);
-				fp = fopen("/tmp/squelch", "w");
-				fputc('1', fp);
-				
-				fclose(fp);
-				voice_to=1;
-			}
-		} else
-			voice_to=0;
+
 		
 		read(0, samples, 3*2);	//read 3 samples (6 unsigned chars)
 		raw_stream[0]=(signed short int)((samples[0+1]<<8)|(samples[0]&0xFF));
@@ -583,116 +401,13 @@ int main(int argc, char **argv)
                                             printf("subfleet=[%4X]\n", subfleet);
                                     }
 
-                                    for(short int l=0; l<deny_total; l++)
-                                    {
-                                        if (groupx == Deny_list[l])
-
-                                        {
-                                            printf("Group[%lld]g is DENIED!\n", Deny_list[l]);
-                                            //squelchSet(5000); //remove if group denial is fully functional                                            
-                                            deny_flag=1;
-                                            if (lcn==current_lcn) //adding this so that if we accidentally tune a denied group, we can cut it off early
-                                            {
-                                                squelchSet(5000);
-                                            }
-                                        }
- 
-                                    }
-
-                                    for(short int o=0; o<deny_total; o++)
-                                    {
-                                        if (senderx == Deny_list[o])
-
-                                        {
-                                            printf("Sender[%lld]i is DENIED!\n", Deny_list[o]);
-                                            //squelchSet(5000); //remove if group denial is fully functional
-                                            deny_flag=1;
-                                            if (lcn==current_lcn) //adding this so that if we accidentally tune a denied sender, we can cut it off early
-                                            {
-                                                squelchSet(5000);
-                                            }
-                                        }
- 
-                                    }
-                                }
-				
-                                
-		                if(allow_num==0 && deny_num==0) // if there are neither allow or deny, then allow all calls
-				{
-					fp = fopen("/tmp/squelch", "r+");
-					fread=fgetc(fp);
-					
-					if(fread=='1')	//if we are currently NOT listening to anything else
-					{
-						if (lcn!=current_lcn)		//tune to LCN
-						{
-							tune(LCN_list[lcn-1]);
-							current_lcn=lcn;
-						}
-					
-						fp = freopen("/tmp/squelch", "w", fp);
-						fputc('0', fp);
-						squelchSet(0);	//unmute
-
-					}
-			
-					fclose(fp);
-				} 
-
-		                if(allow_num==0 && deny_flag != 1) // if nothing in allow file and if deny flag is not tripped, open voice call
-				{
-					fp = fopen("/tmp/squelch", "r+");
-					fread=fgetc(fp);
-					
-					if(fread=='1')	//if we are currently NOT listening to anything else
-					{
-						if (lcn!=current_lcn)		//tune to LCN
-						{
-							tune(LCN_list[lcn-1]);
-							current_lcn=lcn;
-						}
-					
-						fp = freopen("/tmp/squelch", "w", fp);
-						fputc('0', fp);
-						squelchSet(0);	//unmute
-
-					}
-			
-					fclose(fp);
-				} 
-
-                                for(short int j=0; j<allow_total; j++)
-                                {
-                                    if(allow_num>0 && groupx == Allow_list[j] || allow_num>0 && senderx == Allow_list[j]) //now allows for groups and senders
-                                       
-				    {
-					    fp = fopen("/tmp/squelch", "r+");
-					    fread=fgetc(fp);
-					
-					    if(fread=='1')	//if we are currently NOT listening to anything else
-					    {
-						    if (lcn!=current_lcn)		//tune to LCN
-						    {
-							    tune(LCN_list[lcn-1]);
-							    current_lcn=lcn;
-						    }
-					
-						    fp = freopen("/tmp/squelch", "w", fp);
-						    fputc('0', fp);
-						    squelchSet(0);	//unmute
-
-					    }
-			
-					    fclose(fp);
-				    } 
-
                                 }
                                     
 
 			}
                         else
 			{
-			    //printf("LEDACS-ESK v0.2 Build 2020.08.12 \n");	
+			    //printf("LEDACS-ESK-ANALYZER v0.2 Build 2020.08.12 \n");	
                                 
             		}
 		}

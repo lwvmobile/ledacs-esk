@@ -1,4 +1,5 @@
 Forked from https://github.com/sp5wwp/ledacs
+LEDACS-ESK v0.2 Build 2020.08.12
 
 LEDACS-ESK is a command line system written and modified to trunk track
 EDACS ESK systems. This software was forked from aforementioned LEDACS
@@ -48,7 +49,7 @@ cd LEDACS-ESK
 After installing the prerequisite software and extracting 
 the archive into your directory of choice, please run:
 
-chmod +x build.sh rebuild.sh start.sh detector.sh standalone.sh
+chmod +x build.sh rebuild.sh start.sh detector.sh analyzer.sh
 
 This command will give the necessary execution permissions to our scripts for
 building and quickly starting up the software without needing to remember
@@ -83,7 +84,7 @@ LEDACS-ESK will be, and we will simply execute the start.sh file to start the so
 
 The contents of a typical file will be:
 
-rtl_fm -d 0 -f 851375000 -s 28.8k -p 0.5 -g 49 | ./ledacs-esk site243 1 1 0
+rtl_fm -d 0 -f 851375000 -s 28.8k -p 0.5 -g 49 | ./ledacs-esk site243 1 1 0 allow deny
 
 First, we will specify 
 -d 0 as our RTL of choice, 
@@ -101,8 +102,16 @@ REPEAT, DO NOT CHANGE THE SAMPLE RATE. LEAVE AS -s 28.8k.
 
 On the other side, we see this is piped into our software. Currently, you need
 to specify the file name with the LCN channels, the first (1) specifies LCN 1
-as control, the second (1) specifies EDACS-ESK, which can be changed to 2 for legacy,
-and the (0) specifies debug verbosity levels. see ./ledacs-esk -h for more info.
+as control, the second (1) specifies EDACS-ESK, which can be changed to (2) for legacy,
+and the (0) specifies debug verbosity levels. allow and deny refer to files which can
+be populated with group numbers in decimal format for the purpose of allow or deny of
+voice channel assignment. Currently, allow overrides everything in deny, having information
+in both will default to the allow list.
+
+Currently, all of these arguments are required, otherwise a segmentation fault will occur.
+Sorry :( I'm not a good programmer :), just a tinkerer.
+
+See ./ledacs-esk -h for more info.
 
 Then, when you have all values set appropriately in the start.sh file, simply execute it
 with the following command:
@@ -134,6 +143,7 @@ LCN[2]=851800000Hz
 LCN[3]=855987500Hz
 LCN[4]=858487500Hz
 CC=LCN[1]
+LEDACS-ESK v0.2 Build 2020.08.12
 Time: 15:44:10  AFC=1786 	IDLE 	Status=[0xF] 	Site ID=[243]
 Time: 15:44:20  AFC=1860 	IDLE 	Status=[0xF] 	Site ID=[243]
 Time: 15:44:30  AFC=1933 	IDLE 	Status=[0xF] 	Site ID=[243]
@@ -153,19 +163,19 @@ Sender=[ 199401i]
 Group=[  1155g]
 Time: 15:46:51  AFC=2043	VOICE	Status=[0xF] 	LCN=2
 Sender=[ 197868i]
-Time: 15:47:05  AFC=2009	VOICE	Status=[0xF] 	LCN=4	PVT 
+Time: 15:47:05  AFC=2009	VOICE	Status=[0xF] 	LCN=4	
 Sender=[ 197868i]
 Group=[  1155g]
 
-First, we see the current time, the VOICE status, status bits, LCN channel number, and on the next
+First, we see the current time, the VOICE status, Status (hex), LCN channel number, and on the next
 line we see the SENDER and GROUP ID.
 
-Note: You may also wish to use ./standalone as opposed to ./start, using the same parameters.
-This uses the ledacs-esk-standalone version which only tracks the control channel, but does
+Note: You may also wish to use ./analyzer as opposed to ./start, using the same parameters.
+This uses the ledacs-esk-analyzer version which only tracks the control channel, but does
 not attempt to tune frequencies. This may be preferred if you only have or want to use one dongle.
 Raspberry Pi repo version of rtl-sdr includes UDP functionality, which using the ./start method
 may cause the program to attempt to tune its own instance of rtl_fm if ./detector hasn't launched yet.
-Please be sure to run ./detector first, or use the ./standalone if you only have one dongle.
+Please be sure to run ./detector first, or use the ./analyzer if you only have one dongle on RPi.
 
 Dot Detector:
 
@@ -255,7 +265,6 @@ Changing squelch to 5000
 You can see the frequency (in the LCN channel file) being tuned to and 
 squelch being set to 0 (listen) for the duration of that channel assignment,
 then squelch to 5000 to "turn off" that channel, then the next LCN tuned, etc etc.
-
 
 I hope you all find this readme useful, please feel free to send any questions to the
 radioreference.com forums or on github. Thank you. Also, I hope you find usefulness from 
