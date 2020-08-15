@@ -8,7 +8,7 @@
  * XTAL Labs
  * 3 V 2016
  * LWVMOBILE - ESK ANALYZER VERSION
- * 2020-08 Current Version 0.2
+ * 2020-08 Current Version 0.21
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -47,7 +47,7 @@
 #define DATA_CMDX               0xFB    //0xA1
 #define ID_CMD                  0xFD    //0xFD
 #define PATCH_CMD               0xFE    //0xEC
-#define VOICE_CMDX              0x18    //0x18 is VOICE_CMDX
+#define VOICE_CMDX              0x18    //0x18 is VOICE_CMDX (B8 xor A0)
 #define	IDLE_CMD		0xFC	//CC commands
 #define	VOICE_CMD		0xEE	//
 
@@ -88,8 +88,8 @@ signed long long int groupx=0;
 signed long long int sourcep=0;
 signed long long int targetp=0;  
 
-
-unsigned int vcmd=0x00;
+signed int lshifter=0;                                                     //LCN bit shifter
+unsigned int vcmd=0x00;                                                   //voice command variable set by argument
 unsigned char xcommand=0;                                                //XOR of command variable
 unsigned char command=0;						//read from control channel
 unsigned char xlcn=0;
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
 	if(argc>1) //need to fix to prevent segmentation fault and send users to **ERROR** message when not enough arguments
 	{
 			
-                printf("LEDACS-ESK-ANALYZER v0.2 Build 2020.08.12\n");
+                printf("LEDACS-ESK-ANALYZER v0.21 Build 2020.08.15\n");
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -173,11 +173,13 @@ int main(int argc, char **argv)
                 {
                     x_mask=0xA0; //XOR for ESK
                     vcmd=0x18;
+                    lshifter=2;
                 }
                 if (x_choice==2)
                 {
                     x_mask=0x0; //Use original in hope other EDACS variants will still work
                     vcmd=0xEE;
+                    lshifter=0;
                 }
 
                 d_choice = strtol(argv[2], NULL, 10);
@@ -211,7 +213,7 @@ int main(int argc, char **argv)
 		
 	} else {
 		printf("****************************ERROR*****************************\n");
-                printf("LEDACS-ESK-ANALYZER v0.2 Build 2020.08.12 \n");
+                printf("LEDACS-ESK-ANALYZER v0.21 Build 2020.08.15 \n");
 		printf("Not enough parameters!\n\n");
 		printf("Usage: ./ledacs-esk-analyzer ESK DEBUG \n\n");
 		printf("input - file with LCN frequency list\n");
@@ -303,12 +305,12 @@ int main(int argc, char **argv)
                                 command=data^x_mask;           // <--going to go this route so perhaps other variants of ESK will work, defaults to ESK
 
 
+
 			//extract LCN
 			data=((sr_0&LCN_MASK)>>LCN_SHIFT)&0x1F;
 			_data=(~((sr_1&(0xF8000000))>>27))&0x1F;
 			if ( data == _data )
-				//lcn=data;
-                                lcn=data>>2; //Needed to shift an extra 2 to the right, 5 total instead of 3. Need to make sure this is true of all EDACS, or if it varies.
+                                lcn=data>>lshifter; //Needed to shift an extra 2 to the right, 5 total instead of 3. Need to make sure this is true of all EDACS, or if it varies.
                                 
 			
 			//extract STATUS
@@ -370,7 +372,7 @@ int main(int argc, char **argv)
                                 
 
 			}
-                        else if (command==vcmd && lcn>0 && lcn!=cc)
+                        else if (command==vcmd && lcn>0)
 			{
                                 groupx = ((sr_0&0x000000000000000F)<<12)|((sr_1&0xFFF0000000000000)>>52);
                                 senderx = ((sr_4&0xFFFFF00000000000)>>44);
@@ -407,7 +409,7 @@ int main(int argc, char **argv)
 			}
                         else
 			{
-			    //printf("LEDACS-ESK-ANALYZER v0.2 Build 2020.08.12 \n");	
+			    //printf("LEDACS-ESK-ANALYZER v0.21 Build 2020.08.15 \n");	
                                 
             		}
 		}

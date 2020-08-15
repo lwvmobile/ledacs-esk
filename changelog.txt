@@ -1,3 +1,7 @@
+V0.21 Build 2020.08.15
+Fix bug in ledacs-esk-analyzer that didn't show calls placed due to removal of LCNs
+Implemented lshifter as an internal variable that changes based on which EDACS system is specified.
+
 v0.2 Build 2020.08.12
 
 Implimented allow/deny lists for groups and senders

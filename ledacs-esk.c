@@ -8,7 +8,7 @@
  * XTAL Labs
  * 3 V 2016
  * LWVMOBILE - ESK VERSION
- * 2020-08 Current Version 0.2
+ * 2020-08 Current Version 0.21
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -47,7 +47,7 @@
 #define DATA_CMDX               0xFB    //0xA1
 #define ID_CMD                  0xFD    //0xFD
 #define PATCH_CMD               0xFE    //0xEC
-#define VOICE_CMDX              0x18    //0x18 is VOICE_CMDX
+#define VOICE_CMDX              0x18    //0x18 is VOICE_CMDX (B8 xor A0)
 #define	IDLE_CMD		0xFC	//CC commands
 #define	VOICE_CMD		0xEE	//
 
@@ -88,8 +88,8 @@ signed long long int groupx=0;
 signed long long int sourcep=0;
 signed long long int targetp=0;  
 
-
-unsigned int vcmd=0x00;
+signed int lshifter=0;                                                     //LCN bit shifter
+unsigned int vcmd=0x00;                                                   //voice command variable set by argument
 unsigned char xcommand=0;                                                //XOR of command variable
 unsigned char command=0;						//read from control channel
 unsigned char xlcn=0;
@@ -317,7 +317,7 @@ int main(int argc, char **argv)
 			
 			return 1;
 		}				
-                printf("LEDACS-ESK v0.2 Build 2020.08.12\n");
+                printf("LEDACS-ESK v0.21 Build 2020.08.15\n");
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -333,11 +333,13 @@ int main(int argc, char **argv)
                 {
                     x_mask=0xA0; //XOR for ESK
                     vcmd=0x18;
+                    lshifter=2;
                 }
                 if (x_choice==2)
                 {
                     x_mask=0x0; //Use original in hope other EDACS variants will still work
                     vcmd=0xEE;
+                    lshifter=0;
                 }
 
                 d_choice = strtol(argv[4], NULL, 10);
@@ -371,7 +373,7 @@ int main(int argc, char **argv)
 		
 	} else {
 		printf("****************************ERROR*****************************\n");
-                printf("LEDACS-ESK v0.2 Build 2020.08.12 \n");
+                printf("LEDACS-ESK v0.21 Build 2020.08.15 \n");
 		printf("Not enough parameters!\n\n");
 		printf("Usage: ./ledacs-esk input CC ESK DEBUG allow deny \n\n");
 		printf("input - file with LCN frequency list\n");
@@ -489,10 +491,9 @@ int main(int argc, char **argv)
 			data=((sr_0&LCN_MASK)>>LCN_SHIFT)&0x1F;
 			_data=(~((sr_1&(0xF8000000))>>27))&0x1F;
 			if ( data == _data )
-				//lcn=data;
-                                lcn=data>>2; //Needed to shift an extra 2 to the right, 5 total instead of 3. Need to make sure this is true of all EDACS, or if it varies.
-                                
-			
+                                lcn=data>>lshifter; //Needed to shift an extra 2 to the right, 5 total instead of 3. Need to make sure this is true of all EDACS, or if it varies.
+                               
+		
 			//extract STATUS
 			data=(((sr_0&STATUS_MASK)<<1)|(sr_1>>63))&0x0F; //STATUS_MASK = 0x07
 			_data=(~((sr_1&(0x3800000))>>23))&0x0F;
@@ -692,7 +693,7 @@ int main(int argc, char **argv)
 			}
                         else
 			{
-			    //printf("LEDACS-ESK v0.2 Build 2020.08.12 \n");	
+			    //printf("LEDACS-ESK v0.21 Build 2020.08.15 \n");	
                                 
             		}
 		}
