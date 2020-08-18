@@ -1,3 +1,12 @@
+V0.22 Build 2020.08.17
+Minor code cleaning and tweaking
+Cleaned up Debug and simplified
+Debug 0 = No verbosity
+Debug 1 = SR output for Idle and Voice and legacy AFS info
+Debug 2 = Display all commands received, status, and SR, plus debug 1
+
+Tinkering with .detector script sample output sound rate (boosted to 48000 mono out)
+
 V0.21 Build 2020.08.15
 Fix bug in ledacs-esk-analyzer that didn't show calls placed due to removal of LCNs
 Implemented lshifter as an internal variable that changes based on which EDACS system is specified.

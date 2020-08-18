@@ -1,5 +1,5 @@
 Forked from https://github.com/sp5wwp/ledacs
-LEDACS-ESK v0.21 Build 2020.08.15
+LEDACS-ESK v0.22 Build 2020.08.17
 
 LEDACS-ESK is a command line system written and modified to trunk track
 EDACS ESK systems. This software was forked from aforementioned LEDACS
@@ -180,7 +180,7 @@ of LEDACS-ESK and tune to the appropriate voice channel.
 
 Below is our example ./detector.sh script:
 
-rtl-sdr-master-upd/rtl-sdr-master/build/src/rtl_udp -d 1 -f 851.375M -s 28.8k -p 0.5 -g 49 | tee >(sox -t raw -b 16 -e signed-integer -r 28800 -c 1 - -t raw - vol 2 sinc 0.2k-4.5k -a 110 rate 14400 | aplay -t raw -f S16_LE -r 14400 -c 1) | ./dot-detector
+rtl-sdr-master-upd/rtl-sdr-master/build/src/rtl_udp -d 1 -f 851.375M -s 28.8k -p 0.5 -g 49 | tee >(sox -t raw -b 16 -e signed-integer -r 28800 -c 1 - -t raw - vol 2 sinc 0.2k-4.5k -a 110 rate 48000 | aplay -t raw -f S16_LE -r 48000 -c 1) | ./dot-detector
 
 First, we see we call rtl_upd much like we did above with rtl_fm, the values for frequency don't matter as the 
 software will change to the appropriate channel, but in this example we tune to the Control Channel to verify audio

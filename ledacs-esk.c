@@ -8,7 +8,7 @@
  * XTAL Labs
  * 3 V 2016
  * LWVMOBILE - ESK VERSION
- * 2020-08 Current Version 0.21
+ * 2020-08 Current Version 0.22
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -317,7 +317,7 @@ int main(int argc, char **argv)
 			
 			return 1;
 		}				
-                printf("LEDACS-ESK v0.21 Build 2020.08.15\n");
+                printf("LEDACS-ESK v0.22 Build 2020.08.17\n");
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -373,15 +373,16 @@ int main(int argc, char **argv)
 		
 	} else {
 		printf("****************************ERROR*****************************\n");
-                printf("LEDACS-ESK v0.21 Build 2020.08.15 \n");
+                printf("LEDACS-ESK v0.22 Build 2020.08.17 \n");
 		printf("Not enough parameters!\n\n");
 		printf("Usage: ./ledacs-esk input CC ESK DEBUG allow deny \n\n");
 		printf("input - file with LCN frequency list\n");
 		printf("         must be located in same directory as ledacs-esk\n");
 		printf("cc    - control channel number in LCN frequency list\n");
 		printf("ESK   - 1 - ESK enable; 2 - legacy EDACS no ESK\n");
-		printf("DEBUG - 0 - off; 1-3 debug info verbosity levels\n");
-		printf("        Needs More information on Debug levels\n");
+		printf("DEBUG - 0 - off; 1-2 debug info verbosity levels\n");
+		printf("        1 - Show Debug SR on IDLE and VOICE\n");
+		printf("        2 - Show Debug SR on all received commands\n");
                 printf("allow   file with allowed group list\n");
                 printf("deny    file with denied  group list\n\n");
                 printf("Example - ./ledacs-esk site243 1 1 0 allow deny             \n\n");
@@ -491,7 +492,7 @@ int main(int argc, char **argv)
 			data=((sr_0&LCN_MASK)>>LCN_SHIFT)&0x1F;
 			_data=(~((sr_1&(0xF8000000))>>27))&0x1F;
 			if ( data == _data )
-                                lcn=data>>lshifter; //Needed to shift an extra 2 to the right, 5 total instead of 3. Need to make sure this is true of all EDACS, or if it varies.
+                                lcn=data>>lshifter; //using lshifter to shift additional bits as required
                                
 		
 			//extract STATUS
@@ -520,28 +521,23 @@ int main(int argc, char **argv)
 			last_sync_time = time(NULL);	                                   //set timestamp
                         print_timeri = print_timeri - 1;                                  //primitive timer for printing out IDLE status updates
                         deny_flag = 0;                                                   //reset deny flag back to 0 for start of each loop
-			if (command==IDLE_CMD && debug==0 && print_timeri<1)		//IDLE
+			if (command==IDLE_CMD && print_timeri<1)		        //IDLE
 			{
                                 
                                 site_id = ((sr_2&0xFFF00)>>10);
 				printf("Time: %s  AFC=%d \tIDLE \tStatus=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, status, site_id);
+                                if (debug>0)
+                                {
+                                    printf("SR_0=[%16llX]\n", sr_0);
+                                    printf("SR_1=[%16llX]\n", sr_1);
+                                    printf("SR_2=[%16llX]\n", sr_2);
+                                    printf("SR_3=[%16llX]\n", sr_3);
+                                    printf("SR_4=[%16llX]\n", sr_4);
+                                }
                                 print_timeri = 150;
+			}
 
-                                
-			}
-			if (command==IDLE_CMD && debug>0)		//IDLE with debug SR outputs
-			{
-                                site_id = ((sr_2&0xFFF00)>>10);
-                                printf("Time: %s  \tAFC=%d \tIDLE \tStatus=[0x%1X] Site ID=[%3lld]\n", getTime(), AFC, status, site_id);
-                                printf("SR_0=[%16llX]\n", sr_0);
-                                printf("SR_1=[%16llX]\n", sr_1);
-                                printf("SR_2=[%16llX]\n", sr_2);
-                                printf("SR_3=[%16llX]\n", sr_3);
-                                printf("SR_4=[%16llX]\n", sr_4);
-                                
-                                
-			}
-			if (debug>2) //This prints if nothing else is received and you need some numbers, highest debug level
+			if (debug>1) //This prints if nothing else is received and you need some numbers, highest debug level
                         {
 				printf("command=[%2X]\n", command); //print original command bits
                                 printf("Status=[0x%1X]\n", status);
@@ -570,7 +566,7 @@ int main(int argc, char **argv)
                                     printf("Time: %s  AFC=%d\tVOICE\tStatus=[0x%1X] \tLCN=%d \n", getTime(), AFC, status, lcn); 
                                     printf("Sender=[%7lldi]\n", senderx);
                                     printf("Group=[%6lldg]\n", groupx);
-                                    if (debug>1)
+                                    if (debug>0)
                                     {
                                             printf("SR_0=[%16llX]\n", sr_0);
                                             printf("SR_1=[%16llX]\n", sr_1);
@@ -693,7 +689,7 @@ int main(int argc, char **argv)
 			}
                         else
 			{
-			    //printf("LEDACS-ESK v0.21 Build 2020.08.15 \n");	
+			    //printf("LEDACS-ESK v0.22 Build 2020.08.17 \n");	
                                 
             		}
 		}
