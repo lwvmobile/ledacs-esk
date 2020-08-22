@@ -1,10 +1,33 @@
+V0.24 Build 2020.08.22
+Implemented PEER listing on debug 2 (too verbose to make a normal feature)
+Re-wrote sender, group, lcn, and status variables to draw from FR instead of SR
+Implemented 'error detection' by comparing fr messages, not full-proof but better
+Included 'understanding_frames.txt' file that breaks down FR 40 bit message segments
+Minor tweaks to IDLE printing while VOICE still active
+Updated Debug to print FR blocks and implemented Debug 3 for 
+printing all error checked FR blocks, and Debug 4 for 
+non-error checked blocks.
+
+V0.23 Build 2020.08.21
+Implemented Human Readable 'FR' blocks of 40 bit (10 HEX) code to 
+represent the 40 bit segments of 'messages' the control channel
+sends in pairs of threes. Will use this to impliment error checking
+in future updates.
+
+Found method to pipe signal from GQRX over UDP into analyzer with nc and sox.
+Added gqrx_udp_signal.sh as an example file/usable script.
+May add more info on its use in future updates.
+
+Updated to only print AFS info when set to legacy EDACS argument on startup.
+(Probably isn't reliable anyways unless its a 4-4-3 AFS bit setup)
+
 V0.22 Build 2020.08.17
 Minor code cleaning and tweaking
 Cleaned up Debug and simplified
 Debug 0 = No verbosity
 Debug 1 = SR output for Idle and Voice and legacy AFS info
 Debug 2 = Display all commands received, status, and SR, plus debug 1
-
+(Update: SR has been replaced with more human readable FR)
 Tinkering with .detector script sample output sound rate (boosted to 48000 mono out)
 
 V0.21 Build 2020.08.15
@@ -32,6 +55,11 @@ exact moment by the software are 'off', then incorect values may temporarily sho
 of this software, this issue will most likely not be fixed, but shouldn't greatly affect the performance
 of the software. For now, best fix may be to ensure good signal with your dongle, adjust position/antenna
 if its convenient.
+
+Update: Since implementing FR blocks and error detection, this seems to behave much better, but 
+may still occur just not nearly as frequently as it used to. True way to fix this would probably
+be to implement a second register and compare them, but this could potentially cause bad performance.
+Most likely better to sacrifice accuracy for maintaining performance.
 
 2.) Voice channels may open for groups/senders in the deny list
 
@@ -68,7 +96,14 @@ rtl_fm -d 0 -f 851375000 -s 28.8k -p 0.5 -g 49 | ./ledacs-esk site243 1 1 3 allo
 Run something similar to above for a few moments and then ctrl-c to close it, then submit the 
 debug.txt file with a description of the type of EDACS system, any known site ID, etc.
 
+6.) Incorrect Site ID.
+Testing has shown that the Site ID is most likely not pulling from the correct portion
+of the control channel signal, will need more testing. The location of the Site ID seems
+to vary from one CC to another, will need more research.
 
+Update: Still trying to figure this out after implementing FR blocks. So far, I can't find
+a reliable pattern to pull site info from. My working hypothesis is that its obscurred or
+has multiple rules in play for solving it.
 
 
 

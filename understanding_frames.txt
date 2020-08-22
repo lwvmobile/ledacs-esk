@@ -1,0 +1,131 @@
+Understanding EDACS 9600 ESK Frames
+
+SR_0=[555557125555 5C07]
+MASK=[000000000000 FFFF]
+
+SR_1=[EEB239 A3F8114DC6]
+MASK=[FFFFFF 0000000000]
+
+SR_2=[5C07EEB239 C3CC1C]
+MASK=[FFFFFFFFFF 000000]
+
+SR_3=[12DC 3C33E3ED23 C3]
+MASK=[0000 FFFFFFFFFF 00]
+
+SR_4=[CC1C12DC 55555712]
+MASK=[00000000 FFFFFFFF]
+
+555557125555 - Frame Sync
+
+Messages are send in triples:
+
+5C07EEB239 - First Time 
+A3F8114DC6 - Second Time is inverted from first
+5C07EEB239 - Third Time
+
+Two Messages per Frame:
+
+C3CC1C12DC - First
+3C33E3ED23 - Second (inverted)
+C3CC1C12DC - Third
+
+55555712 begins new frame sync (or is overflow from loading up the shift register)
+
+New Human Readable Output for Pattern Finding/Debugging:
+
+Time: 01:29:06  AFC=2150 	IDLE 	Status=[0xF] 	Site ID=[  0]
+FR_1=[5C07EEB239]
+FR_2=[A3F8114DC6] Inverse of 1 and 3
+FR_3=[5C07EEB239]
+FR_4=[C3CC1C12DC]
+FR_5=[3C33E3ED23] Inverse of 4 and 6
+FR_6=[C3CC1C12DC]
+
+This strips away the sync portion on the beginning and end, and
+organizes it into 40 bit (10 Hex) message groupings.
+
+Could also use the inverse for implimenting error checking
+This readout removes the frame sync and groups messages
+into 40bit (10 hex) groupings for easy reading.
+
+Time: 07:24:51  AFC=2266	VOICE	Status=[0xF] 	LCN=3 
+Sender=[  68987i] <- 0x10D7B Hex value
+Group=[  1123g] <- 0x0463 Hex Value
+FR_1=[B870463003]
+FR_2=[478FB9CFFC]
+FR_3=[B870463003]
+FR_4=[BA10AD3BE4] ---
+FR_5=[45EFB9E40D]   |
+FR_6=[FD10D7BDF6] --- FR_4 and FR_6 values are misaligned, error receiving this frame
+
+Group:
+MASK=[0007FFF000] <-Digits below 7FFF represent group value
+FR_1=[B870463003]
+
+Sender: 
+MASK=[00FFFFF000] <-Digits below FFFFF represent sender value
+FR_6=[FD10D7BDF6]
+
+
+Time: 07:39:26  AFC=2343	VOICE	Status=[0xF] 	LCN=2 
+Sender=[ 264978i] <- 0x40B12
+Group=[   870g] <- 0x0366 
+FR_1=[B8403661CD]
+FR_2=[47BFC99E32]
+FR_3=[B8403661CD]
+FR_4=[BA40B122CC]
+FR_5=[45BF4EDD33]
+FR_6=[BA40B122CC]
+
+Command:
+MASK=[FF 00000000]
+FR_1=[B8 403661CD] <- B8 is voice command in ESK (0xB8 xor 0xA0 = 0x18)
+
+Group:
+MASK:[000 7FFF 000] Mask is either 7FFF or FFFF, not sure, using 7FFF 
+FR_1=[B84 0366 1CD]
+
+Sender: 
+MASK=[00 FFFFF 000]
+FR_4=[BA 40B12 2CC]
+
+Peers:
+command=F8  
+Status=0xF
+MASK=[00000 FF 000]  
+FR_1=[58821 DB 73C]  <-- if fr_1 == fr_4, then fr_1&FF000>>12 while result is not equal to zero
+FR_4=[58821 DB 73C]    |--most likely not the exact rule, but probably more to do with a status bit
+
+LCN: 
+BITS=   0100 0       |--Take First 5 bits of this set, then shift right to make 0010 = LCN 2
+MASK=[00 F8 000000] <- All 4 binary bits of first, First binary bit of second 
+FR_1=[B8 40 3661CD]  |--Rule doesn't seem to hold up for ESK, 
+
+Status:
+BITS=   0(100 0)000 <--4 binary bits in parenthesis are status 1000 = 0x8?
+MASK=[00 1E 000000] <-- 0x40 & 0x1E
+FR_1=[B8 40 3661CD]   |-- pain in the ass, figure it out later.
+                      |-- really need to double check this.
+                      |-- 
+                      |-- 
+
+
+              The 40 information bits in each data frame seem to have
+              the following functions:
+
+                   Bits        Function
+                   -------     ----------------------------------------
+                    0 - 7   :  These eight bits are the command bits
+                    8 - 12  :  Logical channel number
+                     13     :  Status bit
+                     14     :  Status bit
+                     15     :  Status bit
+                     16     :  Status bit; possible use:
+                                 group call if set to zero, individual
+                                 call if set to one (radio ID then is
+                                 given by bits 17 - 27)
+                   17 - 19  :  Agency   ID (3 bits) for group call
+                   20 - 23  :  Fleet    ID (4 bits) for group call
+                   24 - 27  :  Subfleet ID (4 bits) for group call
+                   28 - 39  :  Error detection polynomial
+

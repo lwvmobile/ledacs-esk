@@ -1,5 +1,5 @@
 Forked from https://github.com/sp5wwp/ledacs
-LEDACS-ESK v0.22 Build 2020.08.17
+LEDACS-ESK v0.24 Build 2020.08.22
 
 LEDACS-ESK is a command line system written and modified to trunk track
 EDACS ESK systems. This software was forked from aforementioned LEDACS
@@ -84,7 +84,7 @@ rtl_fm -d 0 -f 851375000 -s 28.8k -p 0.5 -g 49 | ./ledacs-esk site243 1 1 0 allo
 First, we will specify 
 -d 0 as our RTL of choice, 
 -f 851375000, tune it to our control channel frequency
--s 28.88k to specify the sample rate of 28.8k THIS VALUE MUST REMAIN 28.8k, DO NOT
+-s 28.8k to specify the sample rate of 28.8k THIS VALUE MUST REMAIN 28.8k, DO NOT
         CHANGE THIS VALUE AS IT DIRECTLY CORRELATES TO THE bitrate of EDACS systems.
         THE SOFTWARE WILL NOT WORK IF THIS VALUE IS CHANGED. DON'T TOUCH IT!!
  
@@ -100,10 +100,11 @@ to specify the file name with the LCN channels, the first (1) specifies LCN 1
 as control, the second (1) specifies EDACS-ESK, which can be changed to (2) for legacy,
 and the (0) specifies debug verbosity levels. allow and deny refer to files which can
 be populated with group numbers in decimal format for the purpose of allow or deny of
-voice channel assignment. Currently, allow overrides everything in deny, having information
-in both will default to the allow list.
+voice channel assignment. Currently, allow overrides everything in deny, having 
+information in both will default to the allow list.
 
 Currently, all of these arguments are required, otherwise a segmentation fault will occur.
+
 Sorry :( I'm not a good programmer :), just a tinkerer.
 
 See ./ledacs-esk -h for more info.
@@ -162,8 +163,8 @@ Time: 15:47:05  AFC=2009	VOICE	Status=[0xF] 	LCN=4
 Sender=[ 197868i]
 Group=[  1155g]
 
-First, we see the current time, the VOICE status, Status (hex), LCN channel number, and on the next
-line we see the SENDER and GROUP ID.
+First, we see the current time, the VOICE status, Status (hex), LCN channel number, 
+and on the next line we see the SENDER and GROUP ID.
 
 Note: You may also wish to use ./analyzer as opposed to ./start, using the same parameters.
 This uses the ledacs-esk-analyzer version which only tracks the control channel, but does

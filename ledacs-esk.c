@@ -8,7 +8,7 @@
  * XTAL Labs
  * 3 V 2016
  * LWVMOBILE - ESK VERSION
- * 2020-08 Current Version 0.22
+ * Version 0.24 Build 2020.08.22
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -47,6 +47,7 @@
 #define DATA_CMDX               0xFB    //0xA1
 #define ID_CMD                  0xFD    //0xFD
 #define PATCH_CMD               0xFE    //0xEC
+#define PEER_CMD                0xF8
 #define VOICE_CMDX              0x18    //0x18 is VOICE_CMDX (B8 xor A0)
 #define	IDLE_CMD		0xFC	//CC commands
 #define	VOICE_CMD		0xEE	//
@@ -68,6 +69,13 @@ unsigned long long sr_1=0;						//288/64=4.5
 unsigned long long sr_2=0;						//
 unsigned long long sr_3=0;						//
 unsigned long long sr_4=0;						//
+
+unsigned long long fr_6=0;						//40-bit shift registers for pushing decoded binary data
+unsigned long long fr_1=0;						//each is a 40 bit message that repeats 3 times
+unsigned long long fr_2=0;						//two messages per frame
+unsigned long long fr_3=0;						//
+unsigned long long fr_4=0;						//These are the human readable versions for debugging etc
+unsigned long long fr_5=0;
 
 unsigned short a_len=4;							//AFS allocation type (see readme.txt)
 unsigned short f_len=4;							//bit lengths
@@ -317,7 +325,7 @@ int main(int argc, char **argv)
 			
 			return 1;
 		}				
-                printf("LEDACS-ESK v0.22 Build 2020.08.17\n");
+                printf("LEDACS-ESK v0.24 Build 2020.08.22\n");
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -373,16 +381,18 @@ int main(int argc, char **argv)
 		
 	} else {
 		printf("****************************ERROR*****************************\n");
-                printf("LEDACS-ESK v0.22 Build 2020.08.17 \n");
+                printf("LEDACS-ESK v0.24 Build 2020.08.22 \n");
 		printf("Not enough parameters!\n\n");
 		printf("Usage: ./ledacs-esk input CC ESK DEBUG allow deny \n\n");
 		printf("input - file with LCN frequency list\n");
 		printf("         must be located in same directory as ledacs-esk\n");
 		printf("cc    - control channel number in LCN frequency list\n");
 		printf("ESK   - 1 - ESK enable; 2 - legacy EDACS no ESK\n");
-		printf("DEBUG - 0 - off; 1-2 debug info verbosity levels\n");
-		printf("        1 - Show Debug SR on IDLE and VOICE\n");
-		printf("        2 - Show Debug SR on all received commands\n");
+		printf("DEBUG - 0 - off; 1-4 debug info verbosity levels\n");
+		printf("        1 - Show Debug FR on IDLE and VOICE\n");
+		printf("        2 - Show Debug FR on IDLE, VOICE; show PEERS\n");
+		printf("        3 - Show Debug FR on all incoming messages\n");
+		printf("        4 - Show Debug FR on all incoming messages; non Error Corrected\n");
                 printf("allow   file with allowed group list\n");
                 printf("deny    file with denied  group list\n\n");
                 printf("Example - ./ledacs-esk site243 1 1 0 allow deny             \n\n");
@@ -475,34 +485,35 @@ int main(int argc, char **argv)
 		
 		if ((sr_0&SYNC_MASK)==SYNC_FRAME)	//extract data after receiving the sync frame
 		{
+                        //put sr data in human readable/easier to work with fr 40 bit (10 hex) messages
+                        fr_1 = ((sr_0 & 0xFFFF)<<24)|((sr_1 & 0xFFFFFF0000000000)>>40);
+                        fr_2 = sr_1 & 0xFFFFFFFFFF;
+                        fr_3 = (sr_2 & 0xFFFFFFFFFF000000)>>24;
+                        fr_4 = ((sr_2 & 0xFFFFFF)<<16)|((sr_3 & 0xFFFF000000000000)>>48);
+                        fr_5 = ((sr_3 & 0xFFFFFFFFFF00)>>8);
+                        fr_6 = ((sr_3 & 0xFF)<<32)|((sr_4 & 0xFFFFFFFF00000000)>>32);
+			if (fr_1 == fr_3 && fr_4 == fr_6) //error detection up top to trickle down
+                        {
+                            command = ((fr_1&0xFF00000000)>>32)^x_mask;
+                            xstatus = (fr_1&0x1E00000)>>21;
+                            lcn = (fr_1&0xF8000000)>>29;
+			}
+			if (debug>3) //This prints if nothing else is received and you need some numbers and debug 3 doesn't work, highest debug level
+                        {
+				printf("Non Error Corrected FR Message Blocks\n"); 
+                                printf("Status=[0x%1X]\n", xstatus);
+                                printf("FR_1=[%10llX]\n", fr_1);
+                                printf("FR_2=[%10llX]\n", fr_2);
+                                printf("FR_3=[%10llX]\n", fr_3);
+                                printf("FR_4=[%10llX]\n", fr_4);
+                                printf("FR_5=[%10llX]\n", fr_5);
+                                printf("FR_6=[%10llX]\n", fr_6);
+                        }
 			//primitive error detection
 			unsigned short int data, _data;
                         unsigned long long int sender; 
-			//The result of AND is 1 only if both bits are 1. //The result of OR is 1 if any of the two bits is 1. 
-			//extract CMD
-			data=((sr_0&CMD_MASK)>>CMD_SHIFT)&0xFF;       //performs AND operation on sr_0 and CMD_MASK<<8 or (0xFF00), then right shifts those bits by CMD_SHIFT (8). Then performs AND on that value with 0xFF
-                                                                      //CMD_MASK = 0xFF<<CMD_SHIFT. 
-			_data=(~((sr_1&(0xFF00000000))>>32))&0xFF;
-			if ( data == _data )
-                                
-                                command=data^x_mask;           // <--going to go this route so perhaps other variants of ESK will work, defaults to ESK
 
-
-			//extract LCN
-			data=((sr_0&LCN_MASK)>>LCN_SHIFT)&0x1F;
-			_data=(~((sr_1&(0xF8000000))>>27))&0x1F;
-			if ( data == _data )
-                                lcn=data>>lshifter; //using lshifter to shift additional bits as required
-                               
-		
-			//extract STATUS
-			data=(((sr_0&STATUS_MASK)<<1)|(sr_1>>63))&0x0F; //STATUS_MASK = 0x07
-			_data=(~((sr_1&(0x3800000))>>23))&0x0F;
-			if ( data == _data )
-				status=data;
-
-			
-			//extract AFS
+			//extract AFS - Leaving it in the way it was for legacy sake for now
 			data=((sr_1&(0x7FF0000000000000))>>52)&0x7FF;
 			_data=(~((sr_1&(0x7FF000))>>12))&0x7FF;
 
@@ -521,63 +532,79 @@ int main(int argc, char **argv)
 			last_sync_time = time(NULL);	                                   //set timestamp
                         print_timeri = print_timeri - 1;                                  //primitive timer for printing out IDLE status updates
                         deny_flag = 0;                                                   //reset deny flag back to 0 for start of each loop
-			if (command==IDLE_CMD && print_timeri<1)		        //IDLE
+			if (command==IDLE_CMD && print_timeri<1 && voice_to==1)		//IDLE
 			{
                                 
                                 site_id = ((sr_2&0xFFF00)>>10);
-				printf("Time: %s  AFC=%d \tIDLE \tStatus=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, status, site_id);
+				printf("Time: %s  AFC=%d \tIDLE \tStatus=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, xstatus, site_id);
                                 if (debug>0)
                                 {
-                                    printf("SR_0=[%16llX]\n", sr_0);
-                                    printf("SR_1=[%16llX]\n", sr_1);
-                                    printf("SR_2=[%16llX]\n", sr_2);
-                                    printf("SR_3=[%16llX]\n", sr_3);
-                                    printf("SR_4=[%16llX]\n", sr_4);
+                                    printf("FR_1=[%10llX]\n", fr_1);
+                                    printf("FR_2=[%10llX]\n", fr_2);
+                                    printf("FR_3=[%10llX]\n", fr_3);
+                                    printf("FR_4=[%10llX]\n", fr_4);
+                                    printf("FR_5=[%10llX]\n", fr_5);
+                                    printf("FR_6=[%10llX]\n", fr_6);
                                 }
                                 print_timeri = 150;
 			}
-
-			if (debug>1) //This prints if nothing else is received and you need some numbers, highest debug level
+			if (command==PEER_CMD && fr_1==fr_4 && ((fr_1&0xFF000)>>12)>0 && debug>1)		        //PEER LISTING
+			{
+                            printf("PEER=[%3lld]\n", (fr_1&0xFF000)>>12);
+			}
+			if (debug>2) //This prints if nothing else is received and you need some numbers
                         {
 				printf("command=[%2X]\n", command); //print original command bits
-                                printf("Status=[0x%1X]\n", status);
-                                printf("SR_0=[%16llX]\n", sr_0);
-                                printf("SR_1=[%16llX]\n", sr_1);
-                                printf("SR_2=[%16llX]\n", sr_2);
-                                printf("SR_3=[%16llX]\n", sr_3);
-                                printf("SR_4=[%16llX]\n", sr_4);
+                                printf("Status=[0x%1X]\n", xstatus);
+                                printf("FR_1=[%10llX]\n", fr_1);
+                                printf("FR_2=[%10llX]\n", fr_2);
+                                printf("FR_3=[%10llX]\n", fr_3);
+                                printf("FR_4=[%10llX]\n", fr_4);
+                                printf("FR_5=[%10llX]\n", fr_5);
+                                printf("FR_6=[%10llX]\n", fr_6);
                                 
 
 			}
                         else if (command==vcmd && lcn>0 && lcn!=cc)
 			{
-                                groupx = ((sr_0&0x000000000000000F)<<12)|((sr_1&0xFFF0000000000000)>>52);
-                                senderx = ((sr_4&0xFFFFF00000000000)>>44);
+                                if (fr_1 == fr_3 && fr_4 == fr_6) //error detection for groupx, senderx, xstatus variables, probably redundant
+                                {
+                                    groupx = (fr_1&0x7FFF000)>>12;
+                                    senderx = (fr_4&0xFFFFF000)>>12;
+                                    xstatus = (fr_1&0x1E00000)>>21; //may be redundant as well here and up top
+                                }
+
 				if (lcn==current_lcn) //lcn==current_lcn
 				{
 					last_voice_time = time(NULL); 
 					voice_to=0;
 				}
-				
-                                                 
+            
 				else         
                                 {
                                     
-                                    printf("Time: %s  AFC=%d\tVOICE\tStatus=[0x%1X] \tLCN=%d \n", getTime(), AFC, status, lcn); 
-                                    printf("Sender=[%7lldi]\n", senderx);
-                                    printf("Group=[%6lldg]\n", groupx);
+                                    printf("Time: %s  AFC=%d\tVOICE\tStatus=[0x%1X] \tLCN=%d \n", getTime(), AFC, xstatus, lcn);
+                                    if (x_choice==1)
+                                    { 
+                                        printf("Sender=[%7lldi]\n", senderx);
+                                        printf("Group=[%6lldg]\n", groupx);
+                                    }
+                                    if (x_choice==2)
+                                    {
+                                        printf("AFS=[%3llX]\n", afs);
+                                        printf("agency=[%1X]\n", agency);
+                                        printf("fleet=[%1X]\n", fleet);
+                                        printf("subfleet=[%1X]\n", subfleet);
+                                    }                                    
                                     if (debug>0)
                                     {
-                                            printf("SR_0=[%16llX]\n", sr_0);
-                                            printf("SR_1=[%16llX]\n", sr_1);
-                                            printf("SR_2=[%16llX]\n", sr_2);
-                                            printf("SR_3=[%16llX]\n", sr_3);
-                                            printf("SR_4=[%16llX]\n", sr_4);
-                                            printf("Data=[%16X]\n", data);
-                                            printf("AFS=[%16llX]\n", afs);
-                                            printf("agency=[%4X]\n", agency);
-                                            printf("fleet=[%4X]\n", fleet);
-                                            printf("subfleet=[%4X]\n", subfleet);
+                                        printf("FR_1=[%10llX]\n", fr_1);
+                                        printf("FR_2=[%10llX]\n", fr_2);
+                                        printf("FR_3=[%10llX]\n", fr_3);
+                                        printf("FR_4=[%10llX]\n", fr_4);
+                                        printf("FR_5=[%10llX]\n", fr_5);
+                                        printf("FR_6=[%10llX]\n", fr_6);
+
                                     }
 
                                     for(short int l=0; l<deny_total; l++)
@@ -602,7 +629,7 @@ int main(int argc, char **argv)
 
                                         {
                                             printf("Sender[%lld]i is DENIED!\n", Deny_list[o]);
-                                            //squelchSet(5000); //remove if group denial is fully functional
+                                            //squelchSet(5000); //remove if sender denial is fully functional
                                             deny_flag=1;
                                             if (lcn==current_lcn) //adding this so that if we accidentally tune a denied sender, we can cut it off early
                                             {
@@ -689,7 +716,7 @@ int main(int argc, char **argv)
 			}
                         else
 			{
-			    //printf("LEDACS-ESK v0.22 Build 2020.08.17 \n");	
+			    //printf("LEDACS-ESK v0.24 Build 2020.08.22 \n");	
                                 
             		}
 		}
