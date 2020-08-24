@@ -314,7 +314,7 @@ int main(int argc, char **argv)
                         {
                             command = ((fr_1&0xFF00000000)>>32)^x_mask;
                             xstatus = (fr_1&0x1E00000)>>21;
-                            lcn = (fr_1&0xF8000000)>>29;
+                            lcn = (fr_1&0xF8000000)>>(27+lshifter); //fixed this regression in v0.24 branch
 			}
 			if (debug>3) //This prints if nothing else is received and you need some numbers and debug 3 doesn't work, highest debug level
                         {
