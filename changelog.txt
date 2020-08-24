@@ -1,3 +1,13 @@
+V0.25 Build 2020.08
+Finally Fixed Site ID to list the correct ID (thanks EricCottrell)
+Changed Group ID from 7FFF to FFFF (20 bit GID)
+Changed Status to 5-bit MT-1 Status and 4-bit MT-2 Status
+MT-1 and MT-2 Binary Print out in Debug 1 and higher
+(Also need to work on MT-A/MT-B/MT-D)
+Put lshifter back in for ESK EA LCN; need somebody to test LCNs on normal EDACS
+Site ID may still be incorrect on non ESK and/or non EA variants
+May need to break backwards compatibilty, unsure.
+
 V0.24 Build 2020.08.22
 Implemented PEER listing on debug 2 (too verbose to make a normal feature)
 Re-wrote sender, group, lcn, and status variables to draw from FR instead of SR
@@ -104,6 +114,10 @@ to vary from one CC to another, will need more research.
 Update: Still trying to figure this out after implementing FR blocks. So far, I can't find
 a reliable pattern to pull site info from. My working hypothesis is that its obscurred or
 has multiple rules in play for solving it.
+
+Update Update: Finally figured this out thanks to some seriously awesome help from
+EricCottrell at the Radio Reference forums. He had some notes that seriously put
+that to bed. 
 
 
 

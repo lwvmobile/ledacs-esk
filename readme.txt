@@ -1,5 +1,5 @@
 Forked from https://github.com/sp5wwp/ledacs
-LEDACS-ESK v0.24 Build 2020.08.22
+LEDACS-ESK v0.25 Build 2020.08.24
 
 LEDACS-ESK is a command line system written and modified to trunk track
 EDACS ESK systems. This software was forked from aforementioned LEDACS
@@ -140,9 +140,9 @@ LCN[3]=855987500Hz
 LCN[4]=858487500Hz
 CC=LCN[1]
 LEDACS-ESK v0.2 Build 2020.08.12
-Time: 15:44:10  AFC=1786 	IDLE 	Status=[0xF] 	Site ID=[243]
-Time: 15:44:20  AFC=1860 	IDLE 	Status=[0xF] 	Site ID=[243]
-Time: 15:44:30  AFC=1933 	IDLE 	Status=[0xF] 	Site ID=[243]
+Time: 15:44:10  AFC=1786 	IDLE 	MT-1=[0xF] 	Site ID=[243]
+Time: 15:44:20  AFC=1860 	IDLE 	MT-1=[0xF] 	Site ID=[243]
+Time: 15:44:30  AFC=1933 	IDLE 	MT-1=[0xF] 	Site ID=[243]
 
 First, we see that RTL_FM initializes, sets its setting as appropriate, then
 LEDACS-ESK lists our LCN channels in our example site243 file, and we are greeted
@@ -154,12 +154,12 @@ Typical AFC numbers can vary, anything around 1800 or higher should be good enou
 
 When the software receives VOICE commands from the EDACS signal, we will begin to see
 
-Time: 15:46:47  AFC=1994	VOICE	Status=[0xF] 	LCN=4
+Time: 15:46:47  AFC=1994	VOICE	MT-1=[0xF] 	LCN=4
 Sender=[ 199401i]
 Group=[  1155g]
-Time: 15:46:51  AFC=2043	VOICE	Status=[0xF] 	LCN=2
+Time: 15:46:51  AFC=2043	VOICE	MT-1=[0xF] 	LCN=2
 Sender=[ 197868i]
-Time: 15:47:05  AFC=2009	VOICE	Status=[0xF] 	LCN=4	
+Time: 15:47:05  AFC=2009	VOICE	MT-1=[0xF] 	LCN=4	
 Sender=[ 197868i]
 Group=[  1155g]
 

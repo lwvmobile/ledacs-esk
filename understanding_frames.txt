@@ -1,4 +1,4 @@
-Understanding EDACS 9600 ESK Frames
+Understanding EDACS 9600 ESK Extended Adressing Frames
 
 SR_0=[555557125555 5C07]
 MASK=[000000000000 FFFF]
@@ -33,7 +33,7 @@ C3CC1C12DC - Third
 
 New Human Readable Output for Pattern Finding/Debugging:
 
-Time: 01:29:06  AFC=2150 	IDLE 	Status=[0xF] 	Site ID=[  0]
+Time: 01:29:06  AFC=2150 	IDLE 	Site ID=[  0]
 FR_1=[5C07EEB239]
 FR_2=[A3F8114DC6] Inverse of 1 and 3
 FR_3=[5C07EEB239]
@@ -48,32 +48,13 @@ Could also use the inverse for implimenting error checking
 This readout removes the frame sync and groups messages
 into 40bit (10 hex) groupings for easy reading.
 
-Time: 07:24:51  AFC=2266	VOICE	Status=[0xF] 	LCN=3 
-Sender=[  68987i] <- 0x10D7B Hex value
-Group=[  1123g] <- 0x0463 Hex Value
-FR_1=[B870463003]
-FR_2=[478FB9CFFC]
-FR_3=[B870463003]
-FR_4=[BA10AD3BE4] ---
-FR_5=[45EFB9E40D]   |
-FR_6=[FD10D7BDF6] --- FR_4 and FR_6 values are misaligned, error receiving this frame
-
-Group:
-MASK=[0007FFF000] <-Digits below 7FFF represent group value
-FR_1=[B870463003]
-
-Sender: 
-MASK=[00FFFFF000] <-Digits below FFFFF represent sender value
-FR_6=[FD10D7BDF6]
-
-
-Time: 07:39:26  AFC=2343	VOICE	Status=[0xF] 	LCN=2 
+Time: 07:39:26  AFC=2343	VOICE	LCN=2 
 Sender=[ 264978i] <- 0x40B12
 Group=[   870g] <- 0x0366 
 FR_1=[B8403661CD]
 FR_2=[47BFC99E32]
 FR_3=[B8403661CD]
-FR_4=[BA40B122CC]
+FR_4=[BA40B122CC] 
 FR_5=[45BF4EDD33]
 FR_6=[BA40B122CC]
 
@@ -82,11 +63,11 @@ MASK=[FF 00000000]
 FR_1=[B8 403661CD] <- B8 is voice command in ESK (0xB8 xor 0xA0 = 0x18)
 
 Group:
-MASK:[000 7FFF 000] Mask is either 7FFF or FFFF, not sure, using 7FFF 
+MASK:[000 7FFF 000] Mask is FFFF  16 bit group values
 FR_1=[B84 0366 1CD]
 
 Sender: 
-MASK=[00 FFFFF 000]
+MASK=[00 FFFFF 000] FFFFF 20 bit sender values
 FR_4=[BA 40B12 2CC]
 
 Peers:
@@ -97,35 +78,54 @@ FR_1=[58821 DB 73C]  <-- if fr_1 == fr_4, then fr_1&FF000>>12 while result is no
 FR_4=[58821 DB 73C]    |--most likely not the exact rule, but probably more to do with a status bit
 
 LCN: 
-BITS=   0100 0       |--Take First 5 bits of this set, then shift right to make 0010 = LCN 2
+BITS=  (0100 0)000   |--Take First 5 bits of this set, then shift right to make 0010 = LCN 2
 MASK=[00 F8 000000] <- All 4 binary bits of first, First binary bit of second 
-FR_1=[B8 40 3661CD]  |--Rule doesn't seem to hold up for ESK, 
+FR_1=[B8 40 3661CD]  |
 
-Status:
-BITS=   0(100 0)000 <--4 binary bits in parenthesis are status 1000 = 0x8?
-MASK=[00 1E 000000] <-- 0x40 & 0x1E
-FR_1=[B8 40 3661CD]   |-- pain in the ass, figure it out later.
-                      |-- really need to double check this.
-                      |-- 
-                      |-- 
+Time: 04:15:26  AFC=2308	VOICE	LCN=2 
+Sender=[ 333909i]
+Group=[  1123g]
+FR_1=[B850463581] <--50 = (0101 0)000 >>5 = 00010 = LCN2
 
+Time: 04:15:30  AFC=2372	VOICE	LCN=3 
+Sender=[ 333909i]
+Group=[  1123g]
+FR_1=[B8604632C2] <--60 = (0110 0)000 >>5 = 00110 = LCN3
 
-              The 40 information bits in each data frame seem to have
-              the following functions:
+Time: 04:15:37  AFC=2202	VOICE	LCN=4 
+Sender=[ 197864i]
+Group=[  1123g]
+FR_1=[B880463F75] <-- 80 - (1000 0)000 >>5 = 00100 =LCN4
 
-                   Bits        Function
-                   -------     ----------------------------------------
-                    0 - 7   :  These eight bits are the command bits
-                    8 - 12  :  Logical channel number
-                     13     :  Status bit
-                     14     :  Status bit
-                     15     :  Status bit
-                     16     :  Status bit; possible use:
-                                 group call if set to zero, individual
-                                 call if set to one (radio ID then is
-                                 given by bits 17 - 27)
-                   17 - 19  :  Agency   ID (3 bits) for group call
-                   20 - 23  :  Fleet    ID (4 bits) for group call
-                   24 - 27  :  Subfleet ID (4 bits) for group call
-                   28 - 39  :  Error detection polynomial
+NEED TO ADD MT-1;MT-2;MTA,MTB,MTD messages
+MT-1:
+00001 - TDMA Group Voice Channel Assignment
+00010 - Group Data Channel Assignment
+000ll - Digital Group Voice Channel Assignment
+11111 - Use MT-2
+
+MT-2:
+0000 - Initiate Test Call Command
+1101 - Serial Number Request
+1111 - Undefined
+
+Error Detection Polynomial:
+MASK=[0000000 FFF]
+FR_1=[5C07EEB 239] <--Last 12 bits (3 hex) are error detection; not entirely useful for tracking.
+FR_2=[A3F8114 DC6]
+FR_3=[5C07EEB 239]
+FR_4=[C3CC1C1 2DC]
+FR_5=[3C33E3E D23]
+FR_6=[C3CC1C1 2DC]
+
+Site ID
+command=[FD]
+Status=[0x8]          if 5D0 and not 5D8, then
+FR_1=[5D07133193] <--((fr_1 & 0x1F000)>> 12) | ((fr_1 & 0x1F000000)>>19);
+FR_2=[A2F8ECCE6C]
+FR_3=[5D07133193]
+FR_4=[5D07133193] <-- Message seems to be identical on this type
+FR_5=[A2F8ECCE6C]
+FR_6=[5D07133193]
+
 

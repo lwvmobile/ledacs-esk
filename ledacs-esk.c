@@ -7,8 +7,8 @@
  * 
  * XTAL Labs
  * 3 V 2016
- * LWVMOBILE - ESK VERSION
- * Version 0.24 Build 2020.08.22
+ * LWVMOBILE - ESK EA VERSION
+ * Version 0.25 Build 2020.08.24
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -90,11 +90,17 @@ unsigned short x_choice=1;
 unsigned long long afs=0;						//AFS 11-bit info
 unsigned long long int patch_site=0;
 unsigned long long int site_id=0;
-unsigned long long int site_id2=0;
 signed long long int senderx=0;
 signed long long int groupx=0;
 signed long long int sourcep=0;
 signed long long int targetp=0;  
+
+unsigned char mt1=0;
+unsigned char mt2=0;
+unsigned char mta=0;
+unsigned char mtb=0;
+unsigned char mtd1=0;
+unsigned char mtd2=0;
 
 signed int lshifter=0;                                                     //LCN bit shifter
 unsigned int vcmd=0x00;                                                   //voice command variable set by argument
@@ -325,7 +331,7 @@ int main(int argc, char **argv)
 			
 			return 1;
 		}				
-                printf("LEDACS-ESK v0.24 Build 2020.08.22\n");
+                printf("LEDACS-ESK v0.25 Build 2020.08.24\n");
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -381,7 +387,7 @@ int main(int argc, char **argv)
 		
 	} else {
 		printf("****************************ERROR*****************************\n");
-                printf("LEDACS-ESK v0.24 Build 2020.08.22 \n");
+                printf("LEDACS-ESK v0.25 Build 2020.08.24 \n");
 		printf("Not enough parameters!\n\n");
 		printf("Usage: ./ledacs-esk input CC ESK DEBUG allow deny \n\n");
 		printf("input - file with LCN frequency list\n");
@@ -495,13 +501,33 @@ int main(int argc, char **argv)
 			if (fr_1 == fr_3 && fr_4 == fr_6) //error detection up top to trickle down
                         {
                             command = ((fr_1&0xFF00000000)>>32)^x_mask;
-                            xstatus = (fr_1&0x1E00000)>>21;
-                            lcn = (fr_1&0xF8000000)>>29;
+                            lcn = (fr_1&0xF8000000)>>(27+lshifter);
+                            xstatus = (fr_1&0x7C00000)>>22;
+                            mt1 = command>>3;
+                            mt2 = (fr_1&0x780000000)>>31;
+                        }
+			if ((fr_1 & 0xFFF0000000) == 0x5D00000000)	//Site ID
+			{
+                            site_id = ((fr_1 & 0x1F000) >> 12) | ((fr_1 & 0x1F000000)>>19);
 			}
 			if (debug>3) //This prints if nothing else is received and you need some numbers and debug 3 doesn't work, highest debug level
                         {
 				printf("Non Error Corrected FR Message Blocks\n"); 
-                                printf("Status=[0x%1X]\n", xstatus);
+                                printf("MT-1=[0x%2X]\n", xstatus);
+                                printf("MT-1 Binary = ");
+                                for(unsigned short int i=0; i<5; i++)
+                                {	
+                                    signed short int buffer = (xstatus>>4-i)&0x1;
+                                    printf("[%1d] ", buffer);
+                                }
+                                printf("\n");
+                                printf("MT-2 Binary = ");
+                                for(unsigned short int i=0; i<4; i++)
+                                {	
+                                    signed short int buffer = (mt2>>3-i)&0x1;
+                                    printf("[%1d] ", buffer);
+                                }
+                                printf("\n");
                                 printf("FR_1=[%10llX]\n", fr_1);
                                 printf("FR_2=[%10llX]\n", fr_2);
                                 printf("FR_3=[%10llX]\n", fr_3);
@@ -535,10 +561,23 @@ int main(int argc, char **argv)
 			if (command==IDLE_CMD && print_timeri<1 && voice_to==1)		//IDLE
 			{
                                 
-                                site_id = ((sr_2&0xFFF00)>>10);
-				printf("Time: %s  AFC=%d \tIDLE \tStatus=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, xstatus, site_id);
+				printf("Time: %s  AFC=%d \tIDLE \tMT-1=[0x%2X] \tSite ID=[%3lld]\n", getTime(), AFC, mt1, site_id);
                                 if (debug>0)
                                 {
+                                    printf("MT-1 Binary = ");
+                                    for(unsigned short int i=0; i<5; i++)
+                                    {	
+                                        signed short int buffer = (mt1>>4-i)&0x1;
+                                        printf("[%1d] ", buffer);
+                                    }
+                                    printf("\n");
+                                    printf("MT-2 Binary = ");
+                                    for(unsigned short int i=0; i<4; i++)
+                                    {	
+                                        signed short int buffer = (mt2>>3-i)&0x1;
+                                        printf("[%1d] ", buffer);
+                                    }
+                                    printf("\n");
                                     printf("FR_1=[%10llX]\n", fr_1);
                                     printf("FR_2=[%10llX]\n", fr_2);
                                     printf("FR_3=[%10llX]\n", fr_3);
@@ -548,20 +587,35 @@ int main(int argc, char **argv)
                                 }
                                 print_timeri = 150;
 			}
-			if (command==PEER_CMD && fr_1==fr_4 && ((fr_1&0xFF000)>>12)>0 && debug>1)		        //PEER LISTING
+                        if ( (fr_1&0xFFF0000000)==0x5880000000 && ((fr_1&0xFF000)>>12)>0 && debug>1 )  //PEER Listing
 			{
                             printf("PEER=[%3lld]\n", (fr_1&0xFF000)>>12);
 			}
+
 			if (debug>2) //This prints if nothing else is received and you need some numbers
                         {
-				printf("command=[%2X]\n", command); //print original command bits
-                                printf("Status=[0x%1X]\n", xstatus);
-                                printf("FR_1=[%10llX]\n", fr_1);
-                                printf("FR_2=[%10llX]\n", fr_2);
-                                printf("FR_3=[%10llX]\n", fr_3);
-                                printf("FR_4=[%10llX]\n", fr_4);
-                                printf("FR_5=[%10llX]\n", fr_5);
-                                printf("FR_6=[%10llX]\n", fr_6);
+			    printf("command=[%2X]\n", command); //print original command bits
+                            printf("MT-1=[0x%2X]\n", mt1);
+                            printf("MT-1 Binary = ");
+                            for(unsigned short int i=0; i<5; i++)
+                            {	
+                                signed short int buffer = (mt1>>4-i)&0x1;
+                                printf("[%1d] ", buffer);
+                            }
+                            printf("\n");
+                            printf("MT-2 Binary = ");
+                            for(unsigned short int i=0; i<4; i++)
+                            {	
+                                signed short int buffer = (mt2>>3-i)&0x1;
+                                printf("[%1d] ", buffer);
+                            }
+                            printf("\n");
+                            printf("FR_1=[%10llX]\n", fr_1);
+                            printf("FR_2=[%10llX]\n", fr_2);
+                            printf("FR_3=[%10llX]\n", fr_3);
+                            printf("FR_4=[%10llX]\n", fr_4);
+                            printf("FR_5=[%10llX]\n", fr_5);
+                            printf("FR_6=[%10llX]\n", fr_6);
                                 
 
 			}
@@ -569,9 +623,8 @@ int main(int argc, char **argv)
 			{
                                 if (fr_1 == fr_3 && fr_4 == fr_6) //error detection for groupx, senderx, xstatus variables, probably redundant
                                 {
-                                    groupx = (fr_1&0x7FFF000)>>12;
+                                    groupx = (fr_1&0xFFFF000)>>12;
                                     senderx = (fr_4&0xFFFFF000)>>12;
-                                    xstatus = (fr_1&0x1E00000)>>21; //may be redundant as well here and up top
                                 }
 
 				if (lcn==current_lcn) //lcn==current_lcn
@@ -583,7 +636,7 @@ int main(int argc, char **argv)
 				else         
                                 {
                                     
-                                    printf("Time: %s  AFC=%d\tVOICE\tStatus=[0x%1X] \tLCN=%d \n", getTime(), AFC, xstatus, lcn);
+                                    printf("Time: %s  AFC=%d\tVOICE\tMT-1=[0x%2X] \tLCN=%d \n", getTime(), AFC, mt1, lcn);
                                     if (x_choice==1)
                                     { 
                                         printf("Sender=[%7lldi]\n", senderx);
@@ -598,6 +651,20 @@ int main(int argc, char **argv)
                                     }                                    
                                     if (debug>0)
                                     {
+                                        printf("MT-1 Binary = ");
+                                        for(unsigned short int i=0; i<5; i++)
+                                        {	
+                                            signed short int buffer = (mt1>>4-i)&0x1;
+                                            printf("[%1d] ", buffer);
+                                        }
+                                        printf("\n");
+                                        printf("MT-2 Binary = ");
+                                        for(unsigned short int i=0; i<4; i++)
+                                        {	
+                                            signed short int buffer = (mt2>>3-i)&0x1;
+                                            printf("[%1d] ", buffer);
+                                        }
+                                        printf("\n");
                                         printf("FR_1=[%10llX]\n", fr_1);
                                         printf("FR_2=[%10llX]\n", fr_2);
                                         printf("FR_3=[%10llX]\n", fr_3);
@@ -716,7 +783,7 @@ int main(int argc, char **argv)
 			}
                         else
 			{
-			    //printf("LEDACS-ESK v0.24 Build 2020.08.22 \n");	
+			    //printf("LEDACS-ESK v0.25 Build 2020.08.24 \n");	
                                 
             		}
 		}
