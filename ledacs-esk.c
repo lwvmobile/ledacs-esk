@@ -8,7 +8,7 @@
  * XTAL Labs
  * 3 V 2016
  * LWVMOBILE - ESK EA VERSION
- * Version 0.25 Build 2020.08.24
+ * Version 0.26 Build 2020.08.31
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -331,7 +331,7 @@ int main(int argc, char **argv)
 			
 			return 1;
 		}				
-                printf("LEDACS-ESK v0.25 Build 2020.08.24\n");
+                printf("LEDACS-ESK v0.26 Build 2020.08.31\n");
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -387,7 +387,7 @@ int main(int argc, char **argv)
 		
 	} else {
 		printf("****************************ERROR*****************************\n");
-                printf("LEDACS-ESK v0.25 Build 2020.08.24 \n");
+                printf("LEDACS-ESK v0.26 Build 2020.08.31 \n");
 		printf("Not enough parameters!\n\n");
 		printf("Usage: ./ledacs-esk input CC ESK DEBUG allow deny \n\n");
 		printf("input - file with LCN frequency list\n");
@@ -501,7 +501,8 @@ int main(int argc, char **argv)
 			if (fr_1 == fr_3 && fr_4 == fr_6) //error detection up top to trickle down
                         {
                             command = ((fr_1&0xFF00000000)>>32)^x_mask;
-                            lcn = (fr_1&0xF8000000)>>(27+lshifter);
+                            //lcn = (fr_1&0xF8000000)>>(27+lshifter); //OOPS, worked by fluke, had to fix, would cause problems with higher LCN numbers
+                            lcn = (fr_1&0x7E0000000)>>(27+lshifter);
                             xstatus = (fr_1&0x7C00000)>>22;
                             mt1 = command>>3;
                             mt2 = (fr_1&0x780000000)>>31;
@@ -783,7 +784,7 @@ int main(int argc, char **argv)
 			}
                         else
 			{
-			    //printf("LEDACS-ESK v0.25 Build 2020.08.24 \n");	
+			    //printf("LEDACS-ESK v0.26 Build 2020.08.31 \n");	
                                 
             		}
 		}

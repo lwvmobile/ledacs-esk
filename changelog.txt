@@ -1,6 +1,11 @@
-V0.25 Build 2020.08
+V0.26 Build 2020.
+
+Fix LCN channel by acquiring the correct bits; It did work(by fluke), but would have had issues
+if the particular site had more than 16 LCN channels
+
+V0.25 Build 2020.08.24
 Finally Fixed Site ID to list the correct ID (thanks EricCottrell)
-Changed Group ID from 7FFF to FFFF (20 bit GID)
+Changed Group ID from 7FFF to FFFF (16 bit GID)
 Changed Status to 5-bit MT-1 Status and 4-bit MT-2 Status
 MT-1 and MT-2 Binary Print out in Debug 1 and higher
 (Also need to work on MT-A/MT-B/MT-D)
