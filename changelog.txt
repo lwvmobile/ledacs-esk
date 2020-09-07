@@ -1,4 +1,27 @@
-V0.26 Build 2020.
+V0.27 Build 2020.09.07
+Implemented Channel Assignment Types for: 
+   MT-1:
+   00001 - TDMA Group Voice Channel Assignment
+   00010 - Group Data Channel Assignment
+   000ll - Digital Group Voice Channel Assignment
+   11111 - Use MT-2
+
+   MT-2:
+   0000 - Initiate Test Call
+   1101 - Serial Number Request
+
+Changed 'VOICE' to 'ACTIVE' when a channel is active and 
+added printout to bottom to show which of the above it is.
+
+Moved site_id to error detected FR frames in logic 
+Misc other printout tweaks
+
+Reinstituted ADD and KICK listings only in analyzer, way too verbose for normal use.
+
+Added pi-build.sh which includes 'cmake .. -DDETACH_KERNEL_DRIVER=ON' line to prevent
+need to manually modprobe -r kernel driver prior to using dot-detector and rtl_udp.
+
+V0.26 Build 2020.08.31
 
 Fix LCN channel by acquiring the correct bits; It did work(by fluke), but would have had issues
 if the particular site had more than 16 LCN channels

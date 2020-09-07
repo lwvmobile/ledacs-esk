@@ -8,7 +8,7 @@
  * XTAL Labs
  * 3 V 2016
  * LWVMOBILE - ESK EA ANALYZER VERSION
- * Version 0.26 Build 2020.08.31
+ * Version 0.27 Build 2020.09.07
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 	if(argc>1) //need to fix to prevent segmentation fault and send users to **ERROR** message when not enough arguments
 	{
 			
-                printf("LEDACS-ESK-ANALYZER v0.26 Build 2020.08.31\n");
+                printf("LEDACS-ESK-ANALYZER v0.27 Build 2020.09.07\n");
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
 		
 	} else {
 		printf("****************************ERROR*****************************\n");
-                printf("LEDACS-ESK-ANALYZER v0.26 Build 2020.08.31 \n");
+                printf("LEDACS-ESK-ANALYZER v0.27 Build 2020.09.07 \n");
 		printf("Not enough parameters!\n\n");
 		printf("Usage: ./ledacs-esk-analyzer ESK DEBUG \n\n");
 		printf("input - file with LCN frequency list\n");
@@ -236,7 +236,7 @@ int main(int argc, char **argv)
 		printf("ESK   - 1 - ESK enable; 2 - legacy EDACS no ESK\n");
 		printf("DEBUG - 0 - off; 1-4 debug info verbosity levels\n");
 		printf("        1 - Show Debug FR on IDLE and VOICE\n");
-		printf("        2 - Show Debug FR on IDLE, VOICE; show PEERS\n");
+		printf("        2 - Show Debug FR on IDLE, VOICE; show PEERS, ADDS, KICKS\n");
 		printf("        3 - Show Debug FR on all incoming messages\n");
 		printf("        4 - Show Debug FR on all incoming messages; non Error Corrected\n");
                 printf("                                                 ");
@@ -324,10 +324,14 @@ int main(int argc, char **argv)
                             lcn = (fr_1&0x7E0000000)>>(27+lshifter);
                             mt1 = command>>3;
                             mt2 = (fr_1&0x780000000)>>31;
-			}
-			if ((fr_1 & 0xFFF0000000) == 0x5D00000000)	//Site ID
-			{
-                            site_id = ((fr_1 & 0x1F000) >> 12) | ((fr_1 & 0x1F000000)>>19);
+                            mta = (fr_4&0xF000000000)>>36;
+                            mtb = (fr_4&0xE00000000)>>33;
+                            mtd1 = (fr_4&0x1F0000000)>>28;
+                            mtd2 = (fr_1&0x1F0000000)>>28;
+			    if ((fr_1 & 0xFFF0000000) == 0x5D00000000)	//Site ID, moved into error detected portion, don't know why I didn't have it here before
+			    {
+                                site_id = ((fr_1 & 0x1F000) >> 12) | ((fr_1 & 0x1F000000)>>19);
+			    }
 			}
 			if (debug>3) //This prints if nothing else is received and you need some numbers and debug 3 doesn't work, highest debug level
                         {
@@ -340,6 +344,7 @@ int main(int argc, char **argv)
                                     printf("[%1d] ", buffer);
                                 }
                                 printf("\n");
+                                printf("MT-2=[0x%2llX]\n", (fr_1&0x780000000)>>31);
                                 printf("MT-2 Binary = ");
                                 for(unsigned short int i=0; i<4; i++)
                                 {	
@@ -377,10 +382,10 @@ int main(int argc, char **argv)
 			last_sync_time = time(NULL);	                                   //set timestamp
                         print_timeri = print_timeri - 1;                                  //primitive timer for printing out IDLE status updates
                         deny_flag = 0;                                                   //reset deny flag back to 0 for start of each loop
-			if (command==IDLE_CMD && print_timeri<1)                 	//IDLE
+			if (command==ID_CMD && print_timeri<1)                 	//IDLE
 			{
                                 
-				printf("Time: %s  AFC=%d \tIDLE \tMT-1=[0x%2X] \tSite ID=[%3lld]\n", getTime(), AFC, mt1, site_id);
+				printf("Time: %s  AFC=%d \tIDLE \tMT-1=[0x%2X] \tMT-2=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, mt1, mt2, site_id);
                                 if (debug>0)
                                 {
                                     printf("MT-1 Binary = ");
@@ -407,12 +412,49 @@ int main(int argc, char **argv)
                                 print_timeri = 150;
 			}
 			//if (command==PEER_CMD && fr_1==fr_4 && ((fr_1&0xFF000)>>12)>0 && debug>1)		        //PEER LISTING
-                        if ( (fr_1&0xFFF0000000)==0x5880000000 && ((fr_1&0xFF000)>>12)>0 && debug>1 )
+                        if ( (fr_1&0xFFF0000000)==0x5880000000 && ((fr_1&0xFF000)>>12)>0 && debug>1 && debug<3 )
 			{
                             printf("PEER=[%3lld]\n", (fr_1&0xFF000)>>12);
 			}
+                        if (command==PATCH_CMD && debug>1 && debug<3 && (fr_1&0xFF00000000) == 0x5E00000000)         //ADD LISTING 
+                        {
+                        //patch_site = (sr_3&0xFFF0000000000000)>>53;
+                        patch_site = ((fr_4&0xFF00000000)>>32);
+                            if (debug>0)// && patch_site == site_id) 
+                            {
+                                targetp = ((fr_4&0xFFFF000)>>12);
+                                sourcep = ((fr_1&0xFFFF000)>>12);
+                                //printf("Add Source[%6lldg] Target[%6lldg] Site=[%3lld] ADD Site=[%2llX]\n", sourcep, targetp, site_id, patch_site );
+                                printf("Add Source[%6lldg] Target[%6lldg] Site=[%3lld]\n", sourcep, targetp, site_id);  
+                                printf("MT-1=[0x%2X]\n", xstatus);
+                                printf("MT-2=[0x%2llX]\n", (fr_1&0x780000000)>>31);
+                                printf("FR_1=[%10llX]\n", fr_1);
+                                //printf("FR_2=[%10llX]\n", fr_2);
+                                //printf("FR_3=[%10llX]\n", fr_3);
+                                printf("FR_4=[%10llX]\n", fr_4);
+                                //printf("FR_5=[%10llX]\n", fr_5);
+                                //printf("FR_6=[%10llX]\n", fr_6);
+                            }
+                        }
 
-			if (debug>2) //This prints if nothing else is received and you need some numbers
+                        if (command==DATA_CMDX && debug>0 && (fr_1&0xFF00000000) == 0x5B00000000)         //KICK LISTING?? 
+                        {
+                                printf("Receiving Kick Command. command=[%2X]\n", command);
+                                printf("MT-1=[0x%2X]\n", xstatus);
+                                printf("MT-2=[0x%2llX]\n", (fr_1&0x780000000)>>31);
+                                //printf("Kicked=[%4llX]i\n", (fr_4&0xFFFFF000)>>12);
+                                printf("Kicked=[%6lld]i\n", (fr_4&0xFFFFF000)>>12);
+                                //printf("Site_ID_maybe=[%3llX]\n", ((sr_2&0xFFF00)>>10));
+                                printf("FR_1=[%10llX]\n", fr_1);
+                                //printf("FR_2=[%10llX]\n", fr_2);
+                                //printf("FR_3=[%10llX]\n", fr_3);
+                                printf("FR_4=[%10llX]\n", fr_4);
+                                //printf("FR_5=[%10llX]\n", fr_5);
+                                //printf("FR_6=[%10llX]\n", fr_6);
+
+                        }
+
+			if (debug>2 && debug<4) //This prints if nothing else is received and you need some numbers
                         {
 			    printf("command=[%2X]\n", command); //print original command bits
                             printf("MT-1=[0x%2X]\n", mt1);
@@ -423,13 +465,31 @@ int main(int argc, char **argv)
                                 printf("[%1d] ", buffer);
                             }
                             printf("\n");
-                            printf("MT-2 Binary = ");
-                            for(unsigned short int i=0; i<4; i++)
-                            {	
-                                signed short int buffer = (mt2>>3-i)&0x1;
-                                printf("[%1d] ", buffer);
+                            if (mt1 == 0x1F)
+                            {
+                                printf("MT-2=[0x%1X]\n", mt2);
+                                printf("MT-2 Binary = ");
+                                for(unsigned short int i=0; i<4; i++)
+                                {	
+                                    signed short int buffer = (mt2>>3-i)&0x1;
+                                    printf("[%1d] ", buffer);
+                                }
+                                printf("\n");
                             }
-                            printf("\n");
+
+                            /*printf("MT-A=[0x%1X]\n", mta); //mt-a, mt-b, mt-d1 and mt-d2 seems to apply only to inbound calls to CC; disregard on CC??
+                            if (mta == 0xF)
+                            {
+                                printf("MT-B=[0x%1X]\n", mtb);
+                            }
+                            if (mtb == 0x7)
+                            {
+                                printf("MT-D1=[0x%2X]\n", mtd1);
+                            }
+                            if (fr_1 != fr_4 && mtb== 0x7)
+                            {
+                                printf("MT-D2=[0x%2X]\n", mtd2);
+                            } */
                             printf("FR_1=[%10llX]\n", fr_1);
                             printf("FR_2=[%10llX]\n", fr_2);
                             printf("FR_3=[%10llX]\n", fr_3);
@@ -456,11 +516,31 @@ int main(int argc, char **argv)
 				else         
                                 {
                                     
-                                    printf("Time: %s  AFC=%d\tVOICE\tMT-1=[0x%2X] \tLCN=%d \n", getTime(), AFC, mt1, lcn);
+                                    printf("Time: %s  AFC=%d\tACTIVE\tMT-1=[0x%2X] \tMT-2=[0x%1X] \tLCN=%d \n", getTime(), AFC, mt1, mt2, lcn);
                                     if (x_choice==1)
                                     { 
                                         printf("Sender=[%7lldi]\n", senderx);
                                         printf("Group=[%6lldg]\n", groupx);
+                                    }
+                                    if (x_choice==1 && mt1 == 0x3)
+                                    { 
+                                        printf("Digital Group Voice Channel Assignment\n");
+                                    }
+                                    if (x_choice==1 && mt1 == 0x2)
+                                    { 
+                                        printf("Group Data Channel Assignment\n");
+                                    }
+                                    if (x_choice==1 && mt1 == 0x1)
+                                    { 
+                                        printf("TDMA Group Voice Channel Assignment\n");
+                                    }
+                                    if (x_choice==1 && mt1 == 0x1F && mt2 == 0x0)
+                                    { 
+                                        printf("Initiate Test Call\n");
+                                    }
+                                    if (x_choice==1 && mt1 == 0x1F && mt2 == 0xD)
+                                    { 
+                                        printf("Serial Number Request\n");
                                     }
                                     if (x_choice==2)
                                     {
@@ -478,13 +558,16 @@ int main(int argc, char **argv)
                                             printf("[%1d] ", buffer);
                                         }
                                         printf("\n");
-                                        printf("MT-2 Binary = ");
-                                        for(unsigned short int i=0; i<4; i++)
-                                        {	
-                                            signed short int buffer = (mt2>>3-i)&0x1;
-                                            printf("[%1d] ", buffer);
+                                        if (mt1 == 0x1F)
+                                        {
+                                            printf("MT-2 Binary = ");
+                                            for(unsigned short int i=0; i<4; i++)
+                                            {	
+                                                signed short int buffer = (mt2>>3-i)&0x1;
+                                                printf("[%1d] ", buffer);
+                                            }
+                                            printf("\n");
                                         }
-                                        printf("\n");
                                         printf("FR_1=[%10llX]\n", fr_1);
                                         printf("FR_2=[%10llX]\n", fr_2);
                                         printf("FR_3=[%10llX]\n", fr_3);
@@ -500,7 +583,7 @@ int main(int argc, char **argv)
 			}
                         else
 			{
-			    //printf("LEDACS-ESK-ANALYZER v0.26 Build 2020.08.31 \n");	
+			    //printf("LEDACS-ESK-ANALYZER v0.27 Build 2020.09.07 \n");	
                                 
             		}
 		}

@@ -44,7 +44,6 @@ FR_6=[C3CC1C12DC]
 This strips away the sync portion on the beginning and end, and
 organizes it into 40 bit (10 Hex) message groupings.
 
-Could also use the inverse for implimenting error checking
 This readout removes the frame sync and groups messages
 into 40bit (10 hex) groupings for easy reading.
 
@@ -63,19 +62,53 @@ MASK=[FF 00000000]
 FR_1=[B8 403661CD] <- B8 is voice command in ESK (0xB8 xor 0xA0 = 0x18)
 
 Group:
-MASK:[000 7FFF 000] Mask is FFFF  16 bit group values
+MASK:[000 FFFF 000] Mask is FFFF  16 bit group values
 FR_1=[B84 0366 1CD]
 
 Sender: 
 MASK=[00 FFFFF 000] FFFFF 20 bit sender values
 FR_4=[BA 40B12 2CC]
 
+MT-1;MT-2
+MT-1:
+00001 - TDMA Group Voice Channel Assignment
+00010 - Group Data Channel Assignment
+000ll - Digital Group Voice Channel Assignment
+11111 - Use MT-2
+
+MT-2:
+0000 - Initiate Test Call Command
+1101 - Serial Number Request
+1111 - Undefined
+---NEW MT-2 INFO---
+1010 - Site ID Relay??
+0001 - Peer/Neighbor Site Relay??
+1011 -- Unknown? Kick?
+
 Peers:
 command=F8  
-Status=0xF
+
 MASK=[00000 FF 000]  
 FR_1=[58821 DB 73C]  <-- if fr_1 == fr_4, then fr_1&FF000>>12 while result is not equal to zero
 FR_4=[58821 DB 73C]    |--most likely not the exact rule, but probably more to do with a status bit
+
+command=[F8]
+MT-1=[0x1F]
+MT-1 Binary = [1] [1] [1] [1] [1] 
+MT-2=[0x1]
+MT-2 Binary = [0] [0] [0] [1] <--MT-2 Status is 0001 for Peer Relay??
+FR_1=[58811DBE20]
+FR_4=[58811DBE20]
+
+Site ID
+command=[FD]
+MT-1=[0x1F]
+MT-1 Binary = [1] [1] [1] [1] [1] 
+MT-2=[0xA]
+MT-2 Binary = [1] [0] [1] [0] <-- if MT-2 == 1010 or 0xA;
+FR_1=[5D07133193] <--((fr_1 & 0x1F000)>>12) | ((fr_1 & 0x1F000000)>>19);
+FR_4=[5D07133193] <-- Duplicate Message on this type
+
 
 LCN: 
 BITS=  (0100 0)000   |--Take First 5 bits of this set, then shift right to make 0010 = LCN 2
@@ -97,17 +130,16 @@ Sender=[ 197864i]
 Group=[  1123g]
 FR_1=[B880463F75] <-- 80 - (1000 0)000 >>5 = 00100 =LCN4
 
-NEED TO ADD MT-1;MT-2;MTA,MTB,MTD messages
-MT-1:
-00001 - TDMA Group Voice Channel Assignment
-00010 - Group Data Channel Assignment
-000ll - Digital Group Voice Channel Assignment
-11111 - Use MT-2
-
-MT-2:
-0000 - Initiate Test Call Command
-1101 - Serial Number Request
-1111 - Undefined
+Patch (ADD):
+command=[FE]
+MT-1=[0x1F]
+MT-1 Binary = [1] [1] [1] [1] [1] 
+MT-2=[0xC]
+MT-2 Binary = [1] [1] [0] [0] 
+FR_1=[5E700B5D02] <--00B5 Source
+MASK=[000FFFF000]
+FR_4=[4000522911] <--0522 Target
+MASK=[000FFFF000]
 
 Error Detection Polynomial:
 MASK=[0000000 FFF]
@@ -118,14 +150,7 @@ FR_4=[C3CC1C1 2DC]
 FR_5=[3C33E3E D23]
 FR_6=[C3CC1C1 2DC]
 
-Site ID
-command=[FD]
-Status=[0x8]          if 5D0 and not 5D8, then
-FR_1=[5D07133193] <--((fr_1 & 0x1F000)>> 12) | ((fr_1 & 0x1F000000)>>19);
-FR_2=[A2F8ECCE6C]
-FR_3=[5D07133193]
-FR_4=[5D07133193] <-- Message seems to be identical on this type
-FR_5=[A2F8ECCE6C]
-FR_6=[5D07133193]
+
+
 
 

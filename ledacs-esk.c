@@ -8,7 +8,7 @@
  * XTAL Labs
  * 3 V 2016
  * LWVMOBILE - ESK EA VERSION
- * Version 0.26 Build 2020.08.31
+ * Version 0.27 Build 2020.09.07
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -53,8 +53,8 @@
 #define	VOICE_CMD		0xEE	//
 
 #define	MAX_LCN_NUM		32	//maximum number of Logical Channels
-#define MAX_ALLOW_NUM		32
-#define MAX_DENY_NUM		32
+#define MAX_ALLOW_NUM		100
+#define MAX_DENY_NUM		100
 
 unsigned char samples[SAMP_NUM];				        //8-bit samples from rtl_fm (or rtl_udp)
 signed short int raw_stream[SAMP_NUM/2];		                //16-bit signed int samples
@@ -331,7 +331,7 @@ int main(int argc, char **argv)
 			
 			return 1;
 		}				
-                printf("LEDACS-ESK v0.26 Build 2020.08.31\n");
+                printf("LEDACS-ESK v0.27 Build 2020.09.07\n");
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -387,7 +387,7 @@ int main(int argc, char **argv)
 		
 	} else {
 		printf("****************************ERROR*****************************\n");
-                printf("LEDACS-ESK v0.26 Build 2020.08.31 \n");
+                printf("LEDACS-ESK v0.27 Build 2020.09.07 \n");
 		printf("Not enough parameters!\n\n");
 		printf("Usage: ./ledacs-esk input CC ESK DEBUG allow deny \n\n");
 		printf("input - file with LCN frequency list\n");
@@ -506,11 +506,11 @@ int main(int argc, char **argv)
                             xstatus = (fr_1&0x7C00000)>>22;
                             mt1 = command>>3;
                             mt2 = (fr_1&0x780000000)>>31;
+			    if ((fr_1 & 0xFFF0000000) == 0x5D00000000)	//Site ID, moved into error detected portion, don't know why I didn't have it here before
+			    {
+                                site_id = ((fr_1 & 0x1F000) >> 12) | ((fr_1 & 0x1F000000)>>19);
+			    }
                         }
-			if ((fr_1 & 0xFFF0000000) == 0x5D00000000)	//Site ID
-			{
-                            site_id = ((fr_1 & 0x1F000) >> 12) | ((fr_1 & 0x1F000000)>>19);
-			}
 			if (debug>3) //This prints if nothing else is received and you need some numbers and debug 3 doesn't work, highest debug level
                         {
 				printf("Non Error Corrected FR Message Blocks\n"); 
@@ -522,6 +522,7 @@ int main(int argc, char **argv)
                                     printf("[%1d] ", buffer);
                                 }
                                 printf("\n");
+                                printf("MT-2=[0x%2llX]\n", (fr_1&0x780000000)>>31);
                                 printf("MT-2 Binary = ");
                                 for(unsigned short int i=0; i<4; i++)
                                 {	
@@ -559,10 +560,10 @@ int main(int argc, char **argv)
 			last_sync_time = time(NULL);	                                   //set timestamp
                         print_timeri = print_timeri - 1;                                  //primitive timer for printing out IDLE status updates
                         deny_flag = 0;                                                   //reset deny flag back to 0 for start of each loop
-			if (command==IDLE_CMD && print_timeri<1 && voice_to==1)		//IDLE
+			if (command==ID_CMD && print_timeri<1 && voice_to==1)		//IDLE
 			{
                                 
-				printf("Time: %s  AFC=%d \tIDLE \tMT-1=[0x%2X] \tSite ID=[%3lld]\n", getTime(), AFC, mt1, site_id);
+				printf("Time: %s  AFC=%d \tIDLE \tMT-1=[0x%2X] \tMT-2=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, mt1, mt2, site_id);
                                 if (debug>0)
                                 {
                                     printf("MT-1 Binary = ");
@@ -588,12 +589,12 @@ int main(int argc, char **argv)
                                 }
                                 print_timeri = 150;
 			}
-                        if ( (fr_1&0xFFF0000000)==0x5880000000 && ((fr_1&0xFF000)>>12)>0 && debug>1 )  //PEER Listing
+                        if ( (fr_1&0xFFF0000000)==0x5880000000 && ((fr_1&0xFF000)>>12)>0 && debug>1 && debug<3 )  //PEER Listing
 			{
                             printf("PEER=[%3lld]\n", (fr_1&0xFF000)>>12);
 			}
 
-			if (debug>2) //This prints if nothing else is received and you need some numbers
+			if (debug>2 && debug<4) //This prints if nothing else is received and you need some numbers
                         {
 			    printf("command=[%2X]\n", command); //print original command bits
                             printf("MT-1=[0x%2X]\n", mt1);
@@ -604,13 +605,17 @@ int main(int argc, char **argv)
                                 printf("[%1d] ", buffer);
                             }
                             printf("\n");
-                            printf("MT-2 Binary = ");
-                            for(unsigned short int i=0; i<4; i++)
-                            {	
-                                signed short int buffer = (mt2>>3-i)&0x1;
-                                printf("[%1d] ", buffer);
+                            if (mt1 == 0x1F)
+                            {
+                                printf("MT-2=[0x%1X]\n", mt2);
+                                printf("MT-2 Binary = ");
+                                for(unsigned short int i=0; i<4; i++)
+                                {	
+                                    signed short int buffer = (mt2>>3-i)&0x1;
+                                    printf("[%1d] ", buffer);
+                                }
+                                printf("\n");
                             }
-                            printf("\n");
                             printf("FR_1=[%10llX]\n", fr_1);
                             printf("FR_2=[%10llX]\n", fr_2);
                             printf("FR_3=[%10llX]\n", fr_3);
@@ -637,11 +642,31 @@ int main(int argc, char **argv)
 				else         
                                 {
                                     
-                                    printf("Time: %s  AFC=%d\tVOICE\tMT-1=[0x%2X] \tLCN=%d \n", getTime(), AFC, mt1, lcn);
+                                    printf("Time: %s  AFC=%d\tACTIVE\tMT-1=[0x%2X] \tMT-2=[0x%1X] \tLCN=%d \n", getTime(), AFC, mt1, mt2, lcn);
                                     if (x_choice==1)
                                     { 
                                         printf("Sender=[%7lldi]\n", senderx);
                                         printf("Group=[%6lldg]\n", groupx);
+                                    }
+                                    if (x_choice==1 && mt1 == 0x3)
+                                    { 
+                                        printf("Digital Group Voice Channel Assignment\n");
+                                    }
+                                    if (x_choice==1 && mt1 == 0x2)
+                                    { 
+                                        printf("Group Data Channel Assignment\n");
+                                    }
+                                    if (x_choice==1 && mt1 == 0x1)
+                                    { 
+                                        printf("TDMA Group Voice Channel Assignment\n");
+                                    }
+                                    if (x_choice==1 && mt1 == 0x1F && mt2 == 0x0)
+                                    { 
+                                        printf("Initiate Test Call\n");
+                                    }
+                                    if (x_choice==1 && mt1 == 0x1F && mt2 == 0xD)
+                                    { 
+                                        printf("Serial Number Request\n");
                                     }
                                     if (x_choice==2)
                                     {
@@ -784,7 +809,7 @@ int main(int argc, char **argv)
 			}
                         else
 			{
-			    //printf("LEDACS-ESK v0.26 Build 2020.08.31 \n");	
+			    //printf("LEDACS-ESK v0.27 Build 2020.09.07 \n");	
                                 
             		}
 		}

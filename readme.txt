@@ -44,7 +44,7 @@ If you haven't already, please git clone the source code.
 
 git clone https://github.com/lwvmobile/ledacs-esk
 cd LEDACS-ESK
-chmod +x build.sh rebuild.sh start.sh detector.sh analyzer.sh
+chmod +x build.sh pi-build.sh rebuild.sh start.sh detector.sh analyzer.sh
 
 This command will give the necessary execution permissions to our scripts for
 building and quickly starting up the software without needing to remember
@@ -53,7 +53,7 @@ long strings of code.
 Next, run the included build.sh script to compile all the code necesary.
 
 
-./build.sh
+./build.sh // ./pi-build.sh on Raspberry Pi
 
 This process will compile ledacs-esk and dot-detector, extract, cmake and make
 the rtl-sdr-udp required. Make install is not run, and is not recommended to
@@ -127,7 +127,7 @@ Found 2 device(s):
 Using device 0: Generic RTL2832U OEM
 Found Rafael Micro R820T tuner
 Tuner gain set to 49.60 dB.
-Tuned to 851627000 Hz.
+Tuned to 856239500 Hz.
 Oversampling input by: 35x.
 Oversampling output by: 1x.
 Buffer size: 8.13ms
@@ -138,35 +138,89 @@ LCN[1]=851375000Hz
 LCN[2]=851800000Hz
 LCN[3]=855987500Hz
 LCN[4]=858487500Hz
-CC=LCN[1]
-LEDACS-ESK v0.2 Build 2020.08.12
-Time: 15:44:10  AFC=1786 	IDLE 	MT-1=[0xF] 	Site ID=[243]
-Time: 15:44:20  AFC=1860 	IDLE 	MT-1=[0xF] 	Site ID=[243]
-Time: 15:44:30  AFC=1933 	IDLE 	MT-1=[0xF] 	Site ID=[243]
+CC=LCN[3]
+Allow[1]=22049 Group/Sender
+LEDACS-ESK v0.27 Build 2020.09.07
+Time: 18:32:29  AFC=1600 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+Time: 18:32:37  AFC=1934 	IDLE 	MT-1=[0x1F] 	MT-2=[0xB] 	Site ID=[243]
+Time: 18:32:45  AFC=1852 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+Time: 18:32:53  AFC=1908 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+Time: 18:33:05  AFC=2089 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+Time: 18:33:13  AFC=2026 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
 
 First, we see that RTL_FM initializes, sets its setting as appropriate, then
 LEDACS-ESK lists our LCN channels in our example site243 file, and we are greeted
-with a rolling IDLE status, AFC (number of samples processed), Status bits in hex,
-and Site ID in decimal form.
+with a rolling IDLE status, AFC (number of samples processed), MT-1 and MT-2 Status 
+bits in hex, and Site ID in decimal form.
 
 For EDACS 9600, The closer the AFC value comes to 2400, the better/cleaner the signal.
 Typical AFC numbers can vary, anything around 1800 or higher should be good enough.
+If using gqrx-udp-signal, AFC values may be abnormal, disregard.
 
-When the software receives VOICE commands from the EDACS signal, we will begin to see
+When the software receives ACTIVE commands from the EDACS signal, we will begin to see
 
-Time: 15:46:47  AFC=1994	VOICE	MT-1=[0xF] 	LCN=4
-Sender=[ 199401i]
-Group=[  1155g]
-Time: 15:46:51  AFC=2043	VOICE	MT-1=[0xF] 	LCN=2
-Sender=[ 197868i]
-Time: 15:47:05  AFC=2009	VOICE	MT-1=[0xF] 	LCN=4	
-Sender=[ 197868i]
-Group=[  1155g]
+Time: 18:34:38  AFC=2167	ACTIVE	MT-1=[0x 3] 	MT-2=[0x0] 	LCN=2 
+Sender=[ 271955i]
+Group=[ 22033g]
+Digital Group Voice Channel Assignment
+Time: 18:34:46  AFC=2137	ACTIVE	MT-1=[0x 3] 	MT-2=[0x1] 	LCN=4 
+Sender=[ 271985i]
+Group=[ 22033g]
+Digital Group Voice Channel Assignment
+Time: 18:34:54  AFC=1977	ACTIVE	MT-1=[0x 3] 	MT-2=[0x0] 	LCN=1 
+Sender=[ 271985i]
+Group=[ 22033g]
+Digital Group Voice Channel Assignment
 
-First, we see the current time, the VOICE status, Status (hex), LCN channel number, 
-and on the next line we see the SENDER and GROUP ID.
 
-Note: You may also wish to use ./analyzer as opposed to ./start, using the same parameters.
+First, we see the current time, the ACTIVE status, Status (hex), LCN channel number, 
+and on the next line we see the SENDER and GROUP ID followed by the type of channel
+assignment. 
+
+Note: If you select a higher debug verbosity, you may see more information depending on
+the level of debug selected. For example:
+
+Time: 18:39:08  AFC=2108	ACTIVE	MT-1=[0x 3] 	MT-2=[0x1] 	LCN=4 
+Sender=[ 271985i]
+Group=[ 22033g]
+Digital Group Voice Channel Assignment
+MT-1 Binary = [0] [0] [0] [1] [1] 
+MT-2 Binary = [0] [0] [0] [1] 
+FR_1=[B895611E3B]
+FR_2=[476A9EE1C4]
+FR_3=[B895611E3B]
+FR_4=[BA426712E8]
+FR_5=[45BD98ED17]
+FR_6=[BA426712E8]
+Time: 18:39:08  AFC=2232	ACTIVE	MT-1=[0x 3] 	MT-2=[0x1] 	LCN=4 
+Sender=[ 271985i]
+Group=[ 22033g]
+Digital Group Voice Channel Assignment
+MT-1 Binary = [0] [0] [0] [1] [1] 
+MT-2 Binary = [0] [0] [0] [1] 
+FR_1=[B895611E3A]
+FR_2=[476A9EE1C4]
+FR_3=[B815611E3B]
+FR_4=[BA426712E8]
+FR_5=[45BD98ED17]
+FR_6=[BA426792E8]
+Time: 18:39:10  AFC=2253 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+MT-1 Binary = [1] [1] [1] [1] [1] 
+MT-2 Binary = [1] [0] [1] [0] 
+FR_1=[5D07133193]
+FR_2=[A2F8ECCE6C]
+FR_3=[5D07133193]
+FR_4=[5D07133193]
+FR_5=[A2F8ECCE6C]
+FR_6=[5D07133193]
+
+In this example with debug 1, we can see the FR frames (40-bit messages sent in triplicate)
+as well as the MT-1 and MT-2 status bits in binary. Higher verbosity levels can also show
+things such as PEERS, ADDS, KICKS, etc, but this information becomes very verbose and is
+recommended for study purposes, not for daily tracking purposes. Please see 
+'understanding_frames.txt' for more information on EDACS message frames.
+
+Note: You may also wish to use ./analyzer as opposed to ./start, using similar parameters.
 This uses the ledacs-esk-analyzer version which only tracks the control channel, but does
 not attempt to tune frequencies. This may be preferred if you only have or want to use one dongle.
 Raspberry Pi repo version of rtl-sdr includes UDP functionality, which using the ./start method
