@@ -1,5 +1,5 @@
 Forked from https://github.com/sp5wwp/ledacs
-LEDACS-ESK v0.26 Build 2020.08.31
+LEDACS-ESK v0.27 Build 2020.09.07
 
 LEDACS-ESK is a command line system written and modified to trunk track
 EDACS ESK systems. This software was forked from aforementioned LEDACS
