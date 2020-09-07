@@ -72,7 +72,7 @@ in Hz. For example, in the site243 file included you will find:
 
 Listed out seperated by line with no decimals or engineering notation. This format is
 required for now. The LCN channels will need to be in order from 1,2,3, until the end.
-This list, and LEDACS-ESK currently has a limit of 32 LCN Channels per file. 
+EDACS/EDACS-ESK with EA has a limit of 32 LCN Channels, most CCs won't have this many.
 
 Next, we will view the start.sh file, this is where the commands required for running
 LEDACS-ESK will be, and we will simply execute the start.sh file to start the software.
@@ -173,7 +173,7 @@ Group=[ 22033g]
 Digital Group Voice Channel Assignment
 
 
-First, we see the current time, the ACTIVE status, Status (hex), LCN channel number, 
+First, we see the current time, the ACTIVE status, MT-1 and MT-2 Status (hex), LCN channel number, 
 and on the next line we see the SENDER and GROUP ID followed by the type of channel
 assignment. 
 
@@ -253,9 +253,10 @@ encompasses all of your LCNs. However, it cannot be officially supported now, an
 rtl_udp for now. Any feedback of working setups with rtl-sdr+rpt UDP functionality greatly appreciated.
 
 Note: On Raspberry Pi, if ./detector and rtl_udp come up with a USB claimed error message, please run:
-sudo modprobe -r dvb_usb_rtl28xxu
+sudo modprobe -r dvb_usb_rtl28xxu. running pi-build.sh to build should run -DDETACH_KERNEL_DRIVER=ON to prevent
+this error, please rebuild if you are coming from an older version prior to 0.27.
 
-or add to blacklist if you desire. 
+
 
 What Dot Detector does:
 
