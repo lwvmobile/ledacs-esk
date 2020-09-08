@@ -502,7 +502,8 @@ int main(int argc, char **argv)
                         {
                             command = ((fr_1&0xFF00000000)>>32)^x_mask;
                             //lcn = (fr_1&0xF8000000)>>(27+lshifter); //OOPS, worked by fluke, had to fix, would cause problems with higher LCN numbers
-                            lcn = (fr_1&0x7E0000000)>>(27+lshifter);
+                            //lcn = (fr_1&0x7E0000000)>>(27+lshifter); //OOPS again, was grabbing 6 bits, not 5;
+                            lcn = (fr_1&0x3E0000000)>>(27+lshifter);
                             xstatus = (fr_1&0x7C00000)>>22;
                             mt1 = command>>3;
                             mt2 = (fr_1&0x780000000)>>31;

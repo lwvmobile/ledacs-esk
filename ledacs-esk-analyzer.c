@@ -321,7 +321,8 @@ int main(int argc, char **argv)
                             command = ((fr_1&0xFF00000000)>>32)^x_mask;
                             xstatus = (fr_1&0x7C00000)>>22;
                             //lcn = (fr_1&0xF8000000)>>(27+lshifter); //OOPS, worked by fluke, had to fix, would cause problems with higher LCN numbers
-                            lcn = (fr_1&0x7E0000000)>>(27+lshifter);
+                            //lcn = (fr_1&0x7E0000000)>>(27+lshifter); //OOPS again, was grabbing 6 bits, not 5;
+                            lcn = (fr_1&0x3E0000000)>>(27+lshifter);
                             mt1 = command>>3;
                             mt2 = (fr_1&0x780000000)>>31;
                             mta = (fr_4&0xF000000000)>>36;
@@ -382,7 +383,7 @@ int main(int argc, char **argv)
 			last_sync_time = time(NULL);	                                   //set timestamp
                         print_timeri = print_timeri - 1;                                  //primitive timer for printing out IDLE status updates
                         deny_flag = 0;                                                   //reset deny flag back to 0 for start of each loop
-			if (command==ID_CMD && print_timeri<1)                 	//IDLE
+			if (command==ID_CMD && print_timeri<1)                 	        //IDLE
 			{
                                 
 				printf("Time: %s  AFC=%d \tIDLE \tMT-1=[0x%2X] \tMT-2=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, mt1, mt2, site_id);
@@ -437,7 +438,7 @@ int main(int argc, char **argv)
                             }
                         }
 
-                        if (command==DATA_CMDX && debug>0 && (fr_1&0xFF00000000) == 0x5B00000000)         //KICK LISTING?? 
+                        if (command==DATA_CMDX && debug>3 && (fr_1&0xFF00000000) == 0x5B00000000)         //KICK LISTING?? 
                         {
                                 printf("Receiving Kick Command. command=[%2X]\n", command);
                                 printf("MT-1=[0x%2X]\n", xstatus);
