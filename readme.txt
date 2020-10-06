@@ -1,5 +1,5 @@
 Forked from https://github.com/sp5wwp/ledacs
-LEDACS-ESK v0.27 Build 2020.09.07
+LEDACS-ESK v0.3b Build 2020.10.06
 
 LEDACS-ESK is a command line system written and modified to trunk track
 EDACS ESK systems. This software was forked from aforementioned LEDACS
@@ -40,11 +40,14 @@ sudo apt install rtl-sdr
 #Additional For Raspberry Pi users# 
 sudo apt install libusb-1.0.0-dev
 
+#NCURSES support if desired
+sudo apt install libncurses5 libncurses5-dev
+
 If you haven't already, please git clone the source code.
 
 git clone https://github.com/lwvmobile/ledacs-esk
 cd LEDACS-ESK
-chmod +x build.sh pi-build.sh rebuild.sh start.sh detector.sh analyzer.sh
+chmod +x build.sh pi-build.sh rebuild.sh start.sh detector.sh analyzer.sh nstart.sh
 
 This command will give the necessary execution permissions to our scripts for
 building and quickly starting up the software without needing to remember
@@ -141,33 +144,33 @@ LCN[4]=858487500Hz
 CC=LCN[3]
 Allow[1]=22049 Group/Sender
 LEDACS-ESK v0.27 Build 2020.09.07
-Time: 18:32:29  AFC=1600 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
-Time: 18:32:37  AFC=1934 	IDLE 	MT-1=[0x1F] 	MT-2=[0xB] 	Site ID=[243]
-Time: 18:32:45  AFC=1852 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
-Time: 18:32:53  AFC=1908 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
-Time: 18:33:05  AFC=2089 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
-Time: 18:33:13  AFC=2026 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+Time: 18:32:29  OFF=1600 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+Time: 18:32:37  OFF=1934 	IDLE 	MT-1=[0x1F] 	MT-2=[0xB] 	Site ID=[243]
+Time: 18:32:45  OFF=1852 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+Time: 18:32:53  OFF=1908 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+Time: 18:33:05  OFF=2089 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+Time: 18:33:13  OFF=2026 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
 
 First, we see that RTL_FM initializes, sets its setting as appropriate, then
 LEDACS-ESK lists our LCN channels in our example site243 file, and we are greeted
-with a rolling IDLE status, AFC (number of samples processed), MT-1 and MT-2 Status 
+with a rolling IDLE status, OFF (offset from center freq of device), MT-1 and MT-2 Status 
 bits in hex, and Site ID in decimal form.
 
-For EDACS 9600, The closer the AFC value comes to 2400, the better/cleaner the signal.
-Typical AFC numbers can vary, anything around 1800 or higher should be good enough.
-If using gqrx-udp-signal, AFC values may be abnormal, disregard.
+For EDACS 9600, The closer the OFF value comes to 2400, the better/cleaner the signal.
+Typical OFF numbers can vary, anything around 1800 or higher should be good enough.
+If using gqrx-udp-signal, OFF values may be abnormal, disregard.
 
 When the software receives ACTIVE commands from the EDACS signal, we will begin to see
 
-Time: 18:34:38  AFC=2167	ACTIVE	MT-1=[0x 3] 	MT-2=[0x0] 	LCN=2 
+Time: 18:34:38  OFF=2167	ACTIVE	MT-1=[0x 3] 	MT-2=[0x0] 	LCN=2 
 Sender=[ 271955i]
 Group=[ 22033g]
 Digital Group Voice Channel Assignment
-Time: 18:34:46  AFC=2137	ACTIVE	MT-1=[0x 3] 	MT-2=[0x1] 	LCN=4 
+Time: 18:34:46  OFF=2137	ACTIVE	MT-1=[0x 3] 	MT-2=[0x1] 	LCN=4 
 Sender=[ 271985i]
 Group=[ 22033g]
 Digital Group Voice Channel Assignment
-Time: 18:34:54  AFC=1977	ACTIVE	MT-1=[0x 3] 	MT-2=[0x0] 	LCN=1 
+Time: 18:34:54  OFF=1977	ACTIVE	MT-1=[0x 3] 	MT-2=[0x0] 	LCN=1 
 Sender=[ 271985i]
 Group=[ 22033g]
 Digital Group Voice Channel Assignment
@@ -180,7 +183,7 @@ assignment.
 Note: If you select a higher debug verbosity, you may see more information depending on
 the level of debug selected. For example:
 
-Time: 18:39:08  AFC=2108	ACTIVE	MT-1=[0x 3] 	MT-2=[0x1] 	LCN=4 
+Time: 18:39:08  OFF=2108	ACTIVE	MT-1=[0x 3] 	MT-2=[0x1] 	LCN=4 
 Sender=[ 271985i]
 Group=[ 22033g]
 Digital Group Voice Channel Assignment
@@ -192,7 +195,7 @@ FR_3=[B895611E3B]
 FR_4=[BA426712E8]
 FR_5=[45BD98ED17]
 FR_6=[BA426712E8]
-Time: 18:39:08  AFC=2232	ACTIVE	MT-1=[0x 3] 	MT-2=[0x1] 	LCN=4 
+Time: 18:39:08  OFF=2232	ACTIVE	MT-1=[0x 3] 	MT-2=[0x1] 	LCN=4 
 Sender=[ 271985i]
 Group=[ 22033g]
 Digital Group Voice Channel Assignment
@@ -204,7 +207,7 @@ FR_3=[B815611E3B]
 FR_4=[BA426712E8]
 FR_5=[45BD98ED17]
 FR_6=[BA426792E8]
-Time: 18:39:10  AFC=2253 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
+Time: 18:39:10  OFF=2253 	IDLE 	MT-1=[0x1F] 	MT-2=[0xA] 	Site ID=[243]
 MT-1 Binary = [1] [1] [1] [1] [1] 
 MT-2 Binary = [1] [0] [1] [0] 
 FR_1=[5D07133193]
@@ -256,7 +259,16 @@ Note: On Raspberry Pi, if ./detector and rtl_udp come up with a USB claimed erro
 sudo modprobe -r dvb_usb_rtl28xxu. running pi-build.sh to build should run -DDETACH_KERNEL_DRIVER=ON to prevent
 this error, please rebuild if you are coming from an older version prior to 0.27.
 
+New: 2020.10.06 ledacs-esk-ncurses
+Users may wish to use the optional ncurses version of ledacs-esk, just call it with the same parameters as ledacs-esk
+Out will remain in fixed area of the terminal, providing a concise view of all info but limits review capability
+Call with 
 
+./nstart.sh  
+
+or 
+
+rtl_fm -d 0 -f 851375000 -s 28.8k -p 0.5 -g 49 | ./ledacs-esk-ncurses site243 1 1 0 allow deny
 
 What Dot Detector does:
 
@@ -299,15 +311,15 @@ Typical output when tuning channels will include:
 Tuning to: 851800000 [Hz] (central freq: 852052000 [Hz])
 Changing squelch to 0 
 Changing squelch to 5000 
-AFC=1917
+OFF=1917
 Changing squelch to 0 
 Changing squelch to 5000 
-AFC=2046
+OFF=2046
 Changing squelch to 5000 
 Tuning to: 855987500 [Hz] (central freq: 856239500 [Hz])
 Changing squelch to 0 
 Changing squelch to 5000 
-AFC=1820
+OFF=1820
 Changing squelch to 5000 
 Tuning to: 858487500 [Hz] (central freq: 858739500 [Hz])
 Changing squelch to 0 

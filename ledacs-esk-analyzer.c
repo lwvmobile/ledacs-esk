@@ -8,7 +8,7 @@
  * XTAL Labs
  * 3 V 2016
  * LWVMOBILE - ESK EA ANALYZER VERSION
- * Version 0.27 Build 2020.09.07
+ * Version 0.3b Build 2020.10.06
  *-----------------------------------------------------------------------------*/
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 	if(argc>1) //need to fix to prevent segmentation fault and send users to **ERROR** message when not enough arguments
 	{
 			
-                printf("LEDACS-ESK-ANALYZER v0.27 Build 2020.09.07\n");
+                printf("LEDACS-ESK-ANALYZER v0.3b Build 2020.10.06\n");
 		
 		//load AFS allocation info
 		//a_len=strtol(argv[4], NULL, 10);  //changed to optional arguments, may need to be used for normal EDACS/NET without ESK //Segmentation Fault if no value entered           
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
 		
 	} else {
 		printf("****************************ERROR*****************************\n");
-                printf("LEDACS-ESK-ANALYZER v0.27 Build 2020.09.07 \n");
+                printf("LEDACS-ESK-ANALYZER v0.3b Build 2020.10.06 \n");
 		printf("Not enough parameters!\n\n");
 		printf("Usage: ./ledacs-esk-analyzer ESK DEBUG \n\n");
 		printf("input - file with LCN frequency list\n");
@@ -386,7 +386,7 @@ int main(int argc, char **argv)
 			if (command==ID_CMD && print_timeri<1)                 	        //IDLE
 			{
                                 
-				printf("Time: %s  AFC=%d \tIDLE \tMT-1=[0x%2X] \tMT-2=[0x%1X] \tSite ID=[%3lld]\n", getTime(), AFC, mt1, mt2, site_id);
+				printf("Time: %s  OFF=%d \tIDLE \tMT-1=[0x%2X] \tMT-2=[0x%1X] \tSite ID=[%3lld][%2llX]\n", getTime(), AFC, mt1, mt2, site_id, site_id);
                                 if (debug>0)
                                 {
                                     printf("MT-1 Binary = ");
@@ -517,7 +517,7 @@ int main(int argc, char **argv)
 				else         
                                 {
                                     
-                                    printf("Time: %s  AFC=%d\tACTIVE\tMT-1=[0x%2X] \tMT-2=[0x%1X] \tLCN=%d \n", getTime(), AFC, mt1, mt2, lcn);
+                                    printf("Time: %s  OFF=%d\tACTIVE\tMT-1=[0x%2X] \tMT-2=[0x%1X] \tLCN=%d \n", getTime(), AFC, mt1, mt2, lcn);
                                     if (x_choice==1)
                                     { 
                                         printf("Sender=[%7lldi]\n", senderx);
@@ -584,7 +584,7 @@ int main(int argc, char **argv)
 			}
                         else
 			{
-			    //printf("LEDACS-ESK-ANALYZER v0.27 Build 2020.09.07 \n");	
+			    //printf("LEDACS-ESK-ANALYZER v0.2b Build 2020.10.06 \n");	
                                 
             		}
 		}

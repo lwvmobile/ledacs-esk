@@ -75,7 +75,7 @@ MT-1 and MT-2
 MT-1:
 00001 - TDMA Group Voice Channel Assignment
 00010 - Group Data Channel Assignment
-000ll - Digital Group Voice Channel Assignment
+00011 - Digital Group Voice Channel Assignment
 11111 - Use MT-2
 
 MT-2:

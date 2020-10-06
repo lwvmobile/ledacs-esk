@@ -8,7 +8,7 @@
  * XTAL Labs
  * 30 IV 2016
  * LWVMOBILE - Tweaks
- * 2020-08
+ * 2020-10 Version 0.3b ledacs-esk
  *-----------------------------------------------------------------------------*/
 #define _DEFAULT_SOURCE  //_BSD_SOURCE
 #include <stdio.h>
@@ -146,7 +146,7 @@ int main(void)
 				fp = freopen("/tmp/squelch", "w", fp);
 				fputc('1', fp);
 				
-				printf("AFC=%d\n", AFC);
+				printf("OFF=%d\n", AFC);
 			}
 			
 			fclose(fp);
@@ -154,9 +154,10 @@ int main(void)
 		
 		else /* ((sr&0xFFFFFF)==0xC71C71 || (sr&0xFFFFFF)==0xAAAAAA || (sr&0xFFFFFF)==0x555555){ */
 		{
-                    if (sr != 0x0000000000000000)
+                    //if (sr != 0xFFFFFFFFFFFFFFFF && sr != 0xAAAAAAAAAAAAAAAA && sr != 0x5555555555555555 && (sr&0xFFFFFF) != 0xC71C71 && sr&0xF000000000000000 != 0)
+                    if (sr != 0xFFFFFFFFFFFFFFFF && sr != 0xAAAAAAAAAAAAAAAA && sr != 0x5555555555555555 && (sr&0xFFFFFF) != 0xC71C71 && sr&0xF000000000000000 != 0)
                     {
-                	//printf("%016llX\n", sr);
+                	//printf("%016llX\n", sr); //print voice bits only after factoring out dotting sequence and register shifting
                     }
 		}
 	}

@@ -1,3 +1,22 @@
+V0.3b Build 2020.10.06
+Introducing NCURSES build of ledacs-esk as a new seperate program
+ ledacs-esk-ncurses is a drop in replacement for ledacs-esk, call with same parameters
+  or use nstart.sh file included; modify at your leisure
+ users will need to install libncurses5-dev and libncurses5 to use ledacs-esk-ncurses
+ ledacs-esk and ledacs-esk-analyzer are still available
+
+Changed AFC nomenclature to OFF to represent Hz off from center frequency (PPM)
+Updated readme.txt to reflect usage of ledacs-esk-ncurses
+Cleaned up readme.txt in regards to AFC vs OFF and fixed/clarified AFC OFF meaning
+Included ledacs-esk-ncurses into build, rebuild, and pi-build script files
+
+Site ID now prints as decimal and hex side by side (my personal preference)
+Nice ascii art added to ledacs-esk-ncurses
+
+V0.28 Build 2020.09.08
+Had to Fix LCN again, was grabbing 6 bits instead of 5;
+ Would have potentially caused issues with that extra bit grab on higher LCN numbers
+
 V0.27 Build 2020.09.07
 Implemented Channel Assignment Types for: 
    MT-1:
@@ -16,7 +35,7 @@ added printout to bottom to show which of the above it is.
 Moved site_id to error detected FR frames in logic 
 Misc other printout tweaks
 
-Reinstituted ADD and KICK listings only in analyzer, way too verbose for normal use.
+Reinstated ADD and KICK listings only in analyzer, way too verbose for normal use.
 
 Added pi-build.sh which includes 'cmake .. -DDETACH_KERNEL_DRIVER=ON' line to prevent
 need to manually modprobe -r kernel driver prior to using dot-detector and rtl_udp.
