@@ -12,6 +12,9 @@ sudo apt install rtl-sdr
 sudo apt install libusb-1.0.0-dev
 or however your distro handles package management
 
+#NCURSES support if desired
+sudo apt install libncurses5 libncurses5-dev
+
 rtl_udp
 
 Unzip included rtl-sdr-master-udp.zip folder, should extract
