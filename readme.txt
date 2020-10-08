@@ -156,9 +156,10 @@ LEDACS-ESK lists our LCN channels in our example site243 file, and we are greete
 with a rolling IDLE status, OFF (offset from center freq of device), MT-1 and MT-2 Status 
 bits in hex, and Site ID in decimal form.
 
-For EDACS 9600, The closer the OFF value comes to 2400, the better/cleaner the signal.
-Typical OFF numbers can vary, anything around 1800 or higher should be good enough.
-If using gqrx-udp-signal, OFF values may be abnormal, disregard.
+The closer the OFFset value comes to 0, the better/cleaner the signal.
+Typical OFF numbers can vary, but ideally this value will tell you how far
+off center the frequency is in Hz, but shouldn't be too heavily relied on
+as long as performance on the user end seems good and accurate.
 
 When the software receives ACTIVE commands from the EDACS signal, we will begin to see
 
