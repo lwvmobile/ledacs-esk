@@ -1,3 +1,9 @@
+2021-11 Update
+Going forward, this version will no longer be supported by me.
+Please go to:
+https://github.com/lwvmobile/edacs-fm
+For the new version. Thanks.
+
 Forked from https://github.com/sp5wwp/ledacs
 LEDACS-ESK v0.3b Build 2020.10.06
 
